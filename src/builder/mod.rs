@@ -57,7 +57,7 @@ impl ClientBuilder {
             http: self.http,
             room_id: self
                 .room_id
-                .ok_or_else(|| BililiveError::BuildError(String::from("room_id")))?,
+                .ok_or_else(|| BililiveError::Build(String::from("room_id")))?,
         })
     }
 }

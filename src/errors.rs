@@ -17,5 +17,5 @@ pub enum BililiveError {
     #[error("parse error: {0}")]
     Parse(#[from] ParseError),
     #[error("build error: missing field {0}")]
-    BuildError(String),
+    Build(String),
 }
