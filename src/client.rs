@@ -48,7 +48,6 @@ impl JoinHandles {
 }
 
 pub struct Client {
-    http: reqwest::Client,
     room_id: u64,
     uid: u64,
     compression: bool,
@@ -62,7 +61,6 @@ pub struct Client {
 
 impl Client {
     pub(crate) fn new(
-        http: reqwest::Client,
         room_id: u64,
         uid: u64,
         compression: bool,
@@ -71,7 +69,6 @@ impl Client {
     ) -> Self {
         let (kill, _) = broadcast::channel(32);
         Self {
-            http,
             room_id,
             uid,
             compression,
@@ -103,10 +100,7 @@ impl Client {
 
         self.enter_room().await?;
 
-        let heartbeat_handle = tokio::spawn(Self::heart_beat_task(
-            tx_chan,
-            self.kill.subscribe(),
-        ));
+        let heartbeat_handle = tokio::spawn(Self::heart_beat_task(tx_chan, self.kill.subscribe()));
         self.handles = Some(JoinHandles::new(tx_handle, rx_handle, heartbeat_handle));
 
         Ok(())
@@ -164,7 +158,7 @@ impl Client {
                     println!("packet sent, notifying caller");
                     let _ = notify_tx.send(result.map_err(|e| e.into()));
                 }
-                _ => break
+                _ => break,
             }
         }
     }
@@ -184,10 +178,7 @@ impl Client {
                 Either::Left(_) => {
                     let _ = Self::_send_frame(&channel, frame.clone()).await;
                 }
-                Either::Right(_) => {
-                    println!("heart_beat_task kill due to signal");
-                    break;
-                }
+                _ => break,
             }
         }
     }
@@ -231,14 +222,7 @@ impl Client {
                         Err(e) => return Err(e.into()),
                     }
                 }
-                Either::Right(_) => {
-                    println!("rx_task kill due to signal");
-                    break;
-                }
-                _ => {
-                    println!("rx_task kill due to unexpectedly dropped channel");
-                    break;
-                }
+                _ => break,
             }
         }
         Ok(())

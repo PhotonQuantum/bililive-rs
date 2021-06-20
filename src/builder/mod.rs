@@ -68,7 +68,6 @@ impl ClientBuilder {
 
     pub fn build(self) -> Result<Client> {
         Ok(Client::new(
-            self.http,
             self.room_id
                 .ok_or_else(|| BililiveError::Build(String::from("room_id")))?,
             self.uid,
