@@ -27,3 +27,19 @@ macro_rules! setter_option_clone {
         }
     };
 }
+
+#[macro_export]
+macro_rules! while_let_kill {
+    ($kill: expr, $e: expr, $p: pat => $blk: block) => {
+        loop {
+            let fut = $e;
+            let kill_fut = $kill;
+            pin_mut!(fut);
+            pin_mut!(kill_fut);
+            match future::select(fut, kill_fut).await {
+                Either::Left(($p, _)) => $blk,
+                _ => break,
+            }
+        }
+    };
+}
