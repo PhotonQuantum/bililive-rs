@@ -15,7 +15,7 @@ impl Client {
             "platform": "web",
             "clientver": "1.8.2",
             "type": 2,
-            "token": self.token
+            "key": self.token
         });
 
         // TODO buffer proto
