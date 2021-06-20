@@ -6,6 +6,8 @@ pub(crate) type Result<T> = std::result::Result<T, BililiveError>;
 pub enum ParseError {
     #[error("json error: {0}")]
     JSON(#[from] serde_json::Error),
+    #[error("not a valid int32 big endian")]
+    Int32BE,
     #[error("error when parsing room id")]
     RoomId,
     #[error("unknown websocket pack protocol")]

@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use serde::Deserialize;
 
 pub use types::*;
@@ -25,6 +27,14 @@ impl Packet {
     }
     pub fn json<'a, T: Deserialize<'a>>(&'a self) -> Result<T> {
         serde_json::from_slice(&self.data).map_err(|e| ParseError::JSON(e).into())
+    }
+    pub fn int32_be(&self) -> Result<i32> {
+        Ok(i32::from_be_bytes(
+            self.data
+                .as_slice()
+                .try_into()
+                .map_err(|_| ParseError::Int32BE)?,
+        ))
     }
 }
 
