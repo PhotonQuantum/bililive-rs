@@ -53,10 +53,7 @@ impl Client {
                         buf.extend(msg.into_data());
                         match RawPacket::parse(&buf) {
                             IncompleteResult::Ok((remaining, raw)) => {
-                                println!(
-                                    "packet parsed, {} bytes remaining",
-                                    remaining.len()
-                                );
+                                println!("packet parsed, {} bytes remaining", remaining.len());
                                 buf = remaining.to_vec(); // TODO to be optimized
                                 let pack = Packet::from(raw);
                                 if pack.op() == Operation::HeartBeatResponse {
