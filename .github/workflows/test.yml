@@ -21,12 +21,12 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-lint
+          key: ${{ runner.os }}-cargo-stable-${{ hashFiles('**/Cargo.lock') }}-lint
       - uses: actions-rs/toolchain@v1
         name: Setup Cargo Toolchain 🛎️
         with:
           components: rustfmt, clippy
-          toolchain: nightly
+          toolchain: stable
           default: true
       - uses: actions-rs/cargo@v1
         name: Check Code Format 🔧
@@ -51,12 +51,12 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-test
+          key: ${{ runner.os }}-cargo-stable-${{ hashFiles('**/Cargo.lock') }}-test
       - uses: actions-rs/toolchain@v1
         name: Setup Cargo Toolchain 🛎️
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: stable
           default: true
       - uses: actions-rs/cargo@v1
         name: Running Tests 🚀
