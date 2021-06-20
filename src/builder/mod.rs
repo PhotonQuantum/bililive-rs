@@ -1,38 +1,49 @@
+use std::sync::Arc;
+
+use crate::builder::types::RoomQueryResp;
+use crate::errors::{BililiveError, ParseError, Result};
+use crate::{Client, Packet};
+
 #[cfg(test)]
 mod tests;
 mod types;
-
-use crate::builder::types::RoomQueryResponse;
-use crate::errors::{BililiveError, ParseError, Result};
-use crate::Client;
 
 pub struct ClientBuilder {
     http: reqwest::Client,
     compression: bool,
     room_id: Option<u64>,
+    uid: u64,
+    callback: Option<Box<dyn Fn(Packet) + Send + Sync>>,
 }
 
 impl Default for ClientBuilder {
+    #[must_use]
     fn default() -> Self {
         Self::new_with_http(Default::default())
     }
 }
 
 impl ClientBuilder {
+    #[must_use]
     pub fn new() -> Self {
         Default::default()
     }
 
+    #[must_use]
     pub fn new_with_http(http: reqwest::Client) -> Self {
         Self {
             http,
             compression: false,
             room_id: None,
+            uid: 0,
+            callback: None,
         }
     }
 
     setter_copy!(compression, bool);
+    setter_copy!(uid, u64);
     setter_option_copy!(room_id, u64);
+    setter_option_copy!(callback, Box<dyn Fn(Packet) + Send + Sync>);
 
     pub async fn room_id_by_uid(mut self, uid: u64) -> Result<Self> {
         let data = self
@@ -45,7 +56,7 @@ impl ClientBuilder {
             .await?
             .bytes()
             .await?;
-        let resp: RoomQueryResponse = serde_json::from_slice(&data).map_err(ParseError::JSON)?;
+        let resp: RoomQueryResp = serde_json::from_slice(&data).map_err(ParseError::JSON)?;
         let room_id = resp.room_id().ok_or(ParseError::RoomId)?;
 
         self.room_id = Some(room_id);
@@ -53,13 +64,15 @@ impl ClientBuilder {
     }
 
     pub fn build(self) -> Result<Client> {
-        Ok(Client {
-            http: self.http,
-            room_id: self
-                .room_id
+        Ok(Client::new(
+            self.http,
+            self.room_id
                 .ok_or_else(|| BililiveError::Build(String::from("room_id")))?,
-        })
+            self.uid,
+            self.compression,
+            self.callback
+                .map(Arc::from)
+                .ok_or_else(|| BililiveError::Build(String::from("callback")))?,
+        ))
     }
 }
-
-// https://api.live.bilibili.com/bili/living_v2/419220
