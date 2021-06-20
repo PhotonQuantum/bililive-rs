@@ -69,7 +69,7 @@ impl RawPacket {
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
-        let mut buf = Vec::with_capacity(self.packet_length as usize + self.header_length as usize);
+        let mut buf = Vec::with_capacity(self.packet_length as usize);
         buf.extend(self.packet_length.to_be_bytes());
         buf.extend(self.header_length.to_be_bytes());
         buf.extend((self.protocol_version as u16).to_be_bytes());
