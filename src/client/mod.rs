@@ -108,6 +108,10 @@ impl Client {
         self.popularity.load(Relaxed)
     }
 
+    pub fn compression(&self) -> bool {
+        self.compression
+    }
+
     pub async fn connect(&mut self) -> Result<()> {
         // TODO try servers
         let (stream, _) = connect_async(self.servers.first().unwrap()).await?;
