@@ -1,4 +1,6 @@
 use std::borrow::BorrowMut;
+use std::sync::atomic::AtomicI32;
+use std::sync::atomic::Ordering::Relaxed;
 use std::sync::Arc;
 
 use futures_util::stream::{SplitSink, SplitStream};
@@ -10,8 +12,6 @@ use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, Web
 
 use crate::errors::Result;
 use crate::packet::Packet;
-use std::sync::atomic::AtomicI32;
-use std::sync::atomic::Ordering::Relaxed;
 
 mod actions;
 mod send;

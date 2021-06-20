@@ -1,4 +1,9 @@
-use nom::IResult;
+use std::io::{Cursor, Read};
+
+use flate2::read::ZlibDecoder;
+use nom::Err;
+
+use crate::{IncompleteResult, ParseError};
 
 use super::types::{Operation, Protocol};
 
@@ -13,8 +18,38 @@ pub struct RawPacket {
 }
 
 impl RawPacket {
-    pub fn parse(input: &[u8]) -> IResult<&[u8], RawPacket> {
-        super::parser::parse(input)
+    pub fn parse(input: &[u8]) -> IncompleteResult<(&[u8], RawPacket)> {
+        match super::parser::parse(input) {
+            Ok((input, packet)) => {
+                if let Protocol::Buffer = packet.protocol_version {
+                    let mut z = ZlibDecoder::new(Cursor::new(packet.data));
+                    let mut buf = Vec::new();
+                    if let Err(e) = z.read_to_end(&mut buf) {
+                        return IncompleteResult::Err(ParseError::ZlibError(e).into());
+                    }
+
+                    match super::parser::parse(&buf) {
+                        Ok((_, packet)) => IncompleteResult::Ok((input, packet)),
+                        Err(Err::Incomplete(needed)) => IncompleteResult::Err(
+                            ParseError::PacketError(format!(
+                                "incomplete buffer: {:?} needed",
+                                needed
+                            ))
+                            .into(),
+                        ),
+                        Err(Err::Error(e) | Err::Failure(e)) => IncompleteResult::Err(
+                            ParseError::PacketError(format!("{:?}", e)).into(),
+                        ),
+                    }
+                } else {
+                    IncompleteResult::Ok((input, packet))
+                }
+            }
+            Err(Err::Incomplete(needed)) => IncompleteResult::Incomplete(needed),
+            Err(Err::Error(e) | Err::Failure(e)) => {
+                IncompleteResult::Err(ParseError::PacketError(format!("{:?}", e)).into())
+            }
+        }
     }
 
     pub fn new<T: Into<Vec<u8>>>(op: Operation, proto: Protocol, data: T) -> Self {

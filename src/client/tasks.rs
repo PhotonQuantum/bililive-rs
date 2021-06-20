@@ -1,19 +1,19 @@
+use std::sync::atomic::AtomicI32;
+use std::sync::atomic::Ordering::Relaxed;
 use std::sync::Arc;
 
 use futures_util::future::Either;
 use futures_util::{future, SinkExt, StreamExt};
-use nom::Err;
 use pin_utils::pin_mut;
 use tokio::sync::{broadcast, mpsc};
 use tokio_tungstenite::tungstenite::Message;
 
-use crate::errors::{ParseError, Result};
+use crate::errors::Result;
 use crate::packet::{raw::RawPacket, Operation, Packet, Protocol};
+use crate::IncompleteResult;
 
 use super::Client;
 use super::{ChannelType, RxType, TxType};
-use std::sync::atomic::AtomicI32;
-use std::sync::atomic::Ordering::Relaxed;
 
 impl Client {
     pub(crate) async fn tx_task(
@@ -76,7 +76,7 @@ impl Client {
                             if msg.is_binary() {
                                 buf.extend(msg.into_data());
                                 match RawPacket::parse(&buf) {
-                                    Ok((remaining, raw)) => {
+                                    IncompleteResult::Ok((remaining, raw)) => {
                                         println!(
                                             "packet parsed, {} bytes remaining",
                                             remaining.len()
@@ -91,13 +91,11 @@ impl Client {
                                         }
                                         (*callback)(pack)
                                     }
-                                    Err(Err::Incomplete(needed)) => {
+                                    IncompleteResult::Incomplete(needed) => {
                                         println!("incomplete packet, {:?} needed", needed);
                                     }
-                                    Err(Err::Error(e) | Err::Failure(e)) => {
-                                        return Err(
-                                            ParseError::PacketError(format!("{:?}", e)).into()
-                                        );
+                                    IncompleteResult::Err(e) => {
+                                        return Err(e);
                                     }
                                 }
                             }

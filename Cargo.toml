@@ -25,3 +25,4 @@ url = { version = "2.2", features = ["serde"] }
 nom = "6.2"
 futures-util = "0.3"
 pin-utils = "0.1"
+flate2 = "1.0"

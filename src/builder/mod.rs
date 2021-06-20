@@ -51,8 +51,16 @@ impl ClientBuilder {
     setter_option_copy!(room_id, u64);
     setter_option_copy!(uid, u64);
     setter_option_copy!(callback, Box<dyn Fn(Packet) + Send + Sync>);
-    setter_option_clone!(token, String);
-    setter_option_clone!(servers, Vec<String>);
+
+    pub fn token(mut self, token: &str) -> Self {
+        self.token = Some(token.to_string());
+        self
+    }
+
+    pub fn servers(mut self, servers: &[String]) -> Self {
+        self.servers = Some(servers.to_vec());
+        self
+    }
 
     pub async fn by_uid(mut self, uid: u64) -> Result<Self> {
         let data = self

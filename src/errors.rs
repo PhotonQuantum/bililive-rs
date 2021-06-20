@@ -1,6 +1,13 @@
+use nom::Needed;
 use thiserror::Error;
 
 pub(crate) type Result<T> = std::result::Result<T, BililiveError>;
+
+pub enum IncompleteResult<T> {
+    Ok(T),
+    Incomplete(Needed),
+    Err(BililiveError),
+}
 
 #[derive(Debug, Error)]
 pub enum ParseError {
@@ -12,8 +19,10 @@ pub enum ParseError {
     RoomId,
     #[error("unknown websocket pack protocol")]
     UnknownProtocol,
-    #[error("error when parsing packet")]
+    #[error("error when parsing packet struct")]
     PacketError(String),
+    #[error("error when decompressing packet buffer: {0}")]
+    ZlibError(#[from] std::io::Error),
 }
 
 #[derive(Debug, Error)]

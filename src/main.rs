@@ -18,7 +18,7 @@ async fn main() -> Result<()> {
         .compression(false)
         .fetch_conf()
         .await?
-        .servers(&vec!["wss://broadcastlv.chat.bilibili.com/sub".to_string()])
+        .servers(&["wss://broadcastlv.chat.bilibili.com/sub".to_string()])
         .build()?;
     println!("room_id: {}", client.room_id());
     println!("uid: {}", client.uid());

@@ -34,9 +34,6 @@ fn parse_op(input: &[u8]) -> IResult<&[u8], Operation> {
 pub(crate) fn parse(input: &[u8]) -> IResult<&[u8], RawPacket> {
     let (input, (packet_length, header_length, protocol_version, op, seq_id)) =
         tuple((parse_4bit, parse_2bit, parse_proto, parse_op, parse_4bit))(input)?;
-    if let Protocol::Buffer = protocol_version {
-        unimplemented!();
-    }
     let (input, data) = take(packet_length - header_length as u32)(input)?;
     Ok((
         input,
