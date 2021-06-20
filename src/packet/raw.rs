@@ -24,7 +24,7 @@ impl RawPacket {
         }
 
         Self {
-            packet_length: data.len() as u32,
+            packet_length: data.len() as u32 + 16,
             header_length: 16,
             protocol_version: proto,
             op,
