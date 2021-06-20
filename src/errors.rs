@@ -8,6 +8,10 @@ pub enum ParseError {
     JSON(#[from] serde_json::Error),
     #[error("error when parsing room id")]
     RoomId,
+    #[error("unknown websocket pack protocol")]
+    UnknownProtocol,
+    #[error("error when parsing packet")]
+    PacketError(String),
 }
 
 #[derive(Debug, Error)]
@@ -18,4 +22,10 @@ pub enum BililiveError {
     Parse(#[from] ParseError),
     #[error("build error: missing field {0}")]
     Build(String),
+    #[error("websocket error: {0}")]
+    WebSocket(#[from] tokio_tungstenite::tungstenite::Error),
+    #[error("client not connected")]
+    NotConnected,
+    #[error("tokio join error")]
+    JoinError(#[from] tokio::task::JoinError),
 }
