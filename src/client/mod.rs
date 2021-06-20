@@ -10,6 +10,8 @@ use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, Web
 
 use crate::errors::Result;
 use crate::packet::Packet;
+use std::sync::atomic::AtomicI32;
+use std::sync::atomic::Ordering::Relaxed;
 
 mod actions;
 mod send;
@@ -48,19 +50,24 @@ impl JoinHandles {
 pub struct Client {
     room_id: u64,
     uid: u64,
+    token: String,
+    servers: Vec<String>,
     compression: bool,
     tx_buffer: usize,
-    // pub(crate) rx: Option<SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>>,
+    popularity: Arc<AtomicI32>,
     callback: Arc<dyn Fn(Packet) + Send + Sync>,
     handles: Option<JoinHandles>,
     tx_channel: Option<mpsc::Sender<ChannelType>>,
     kill: broadcast::Sender<()>,
 }
 
+// TODO reconnect after unexpectedly disconnected
 impl Client {
     pub(crate) fn new(
         room_id: u64,
         uid: u64,
+        token: String,
+        servers: Vec<String>,
         compression: bool,
         tx_buffer: usize,
         callback: Arc<dyn Fn(Packet) + Send + Sync>,
@@ -69,8 +76,11 @@ impl Client {
         Self {
             room_id,
             uid,
+            token,
+            servers,
             compression,
             tx_buffer,
+            popularity: Arc::new(Default::default()),
             callback,
             handles: None,
             tx_channel: None,
@@ -82,8 +92,25 @@ impl Client {
         self.room_id
     }
 
+    pub fn uid(&self) -> u64 {
+        self.uid
+    }
+
+    pub fn token(&self) -> &str {
+        &self.token
+    }
+
+    pub fn servers(&self) -> Vec<&str> {
+        self.servers.iter().map(|s| s.as_str()).collect::<Vec<_>>()
+    }
+
+    pub fn popularity(&self) -> i32 {
+        self.popularity.load(Relaxed)
+    }
+
     pub async fn connect(&mut self) -> Result<()> {
-        let (stream, _) = connect_async("wss://broadcastlv.chat.bilibili.com/sub").await?;
+        // TODO try servers
+        let (stream, _) = connect_async(self.servers.first().unwrap()).await?;
         let (tx, rx) = stream.split();
 
         let (tx_chan, rx_chan) = mpsc::channel(self.tx_buffer);
@@ -96,6 +123,7 @@ impl Client {
             self.callback.clone(),
             rx,
             self.kill.subscribe(),
+            self.popularity.clone(),
         ));
 
         self.enter_room().await?;

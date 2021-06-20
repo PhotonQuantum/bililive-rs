@@ -12,6 +12,8 @@ use crate::packet::{raw::RawPacket, Operation, Packet, Protocol};
 
 use super::Client;
 use super::{ChannelType, RxType, TxType};
+use std::sync::atomic::AtomicI32;
+use std::sync::atomic::Ordering::Relaxed;
 
 impl Client {
     pub(crate) async fn tx_task(
@@ -59,6 +61,7 @@ impl Client {
         callback: Arc<dyn Fn(Packet) + Send + Sync>,
         mut rx: RxType,
         mut kill: broadcast::Receiver<()>,
+        popularity: Arc<AtomicI32>,
     ) -> Result<()> {
         let mut buf = vec![];
         loop {
@@ -79,7 +82,14 @@ impl Client {
                                             remaining.len()
                                         );
                                         buf = remaining.to_vec(); // TODO to be optimized
-                                        (*callback)(Packet::from(raw))
+                                        let pack = Packet::from(raw);
+                                        if pack.op() == Operation::HeartBeatResponse {
+                                            if let Ok(new_popularity) = pack.int32_be() {
+                                                println!("update popularity {}", new_popularity);
+                                                popularity.store(new_popularity, Relaxed);
+                                            }
+                                        }
+                                        (*callback)(pack)
                                     }
                                     Err(Err::Incomplete(needed)) => {
                                         println!("incomplete packet, {:?} needed", needed);

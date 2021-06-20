@@ -9,12 +9,13 @@ impl Client {
         // "protover": 2,
         let protover = if self.compression { 2 } else { 1 };
         let req = json!({
-          "clientver": "1.6.3",
-          "platform": "web",
-          "protover": protover,
-          "roomid": self.room_id,
-          "uid": self.uid,
-          "type": 2
+            "uid": self.uid,
+            "roomid": self.room_id,
+            "protover": protover,
+            "platform": "web",
+            "clientver": "1.8.2",
+            "type": 2,
+            "token": self.token
         });
 
         // TODO buffer proto

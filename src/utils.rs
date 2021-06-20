@@ -17,3 +17,13 @@ macro_rules! setter_option_copy {
         }
     };
 }
+
+#[macro_export]
+macro_rules! setter_option_clone {
+    ($name: ident, $tyty: ty) => {
+        pub fn $name(mut self, $name: &$tyty) -> Self {
+            self.$name = Some($name.clone());
+            self
+        }
+    };
+}

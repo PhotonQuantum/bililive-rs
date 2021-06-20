@@ -12,11 +12,18 @@ async fn main() -> Result<()> {
         }
     };
     let mut client = ClientBuilder::new()
-        .room_id_by_uid(419220)
+        .by_uid(419220)
         .await?
         .callback(Box::new(callback))
         .compression(false)
+        .fetch_conf()
+        .await?
+        .servers(&vec!["wss://broadcastlv.chat.bilibili.com/sub".to_string()])
         .build()?;
+    println!("room_id: {}", client.room_id());
+    println!("uid: {}", client.uid());
+    println!("token: {}", client.token());
+    println!("servers: {:#?}", client.servers());
     client.connect().await?;
     println!("connected");
     client.join().await?;
