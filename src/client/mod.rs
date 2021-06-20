@@ -52,7 +52,6 @@ pub struct Client {
     uid: u64,
     token: String,
     servers: Vec<String>,
-    compression: bool,
     tx_buffer: usize,
     popularity: Arc<AtomicI32>,
     callback: Arc<dyn Fn(Packet) + Send + Sync>,
@@ -68,7 +67,6 @@ impl Client {
         uid: u64,
         token: String,
         servers: Vec<String>,
-        compression: bool,
         tx_buffer: usize,
         callback: Arc<dyn Fn(Packet) + Send + Sync>,
     ) -> Self {
@@ -78,7 +76,6 @@ impl Client {
             uid,
             token,
             servers,
-            compression,
             tx_buffer,
             popularity: Arc::new(Default::default()),
             callback,
@@ -106,10 +103,6 @@ impl Client {
 
     pub fn popularity(&self) -> i32 {
         self.popularity.load(Relaxed)
-    }
-
-    pub fn compression(&self) -> bool {
-        self.compression
     }
 
     pub async fn connect(&mut self) -> Result<()> {

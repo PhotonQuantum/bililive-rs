@@ -6,11 +6,10 @@ use crate::Client;
 
 impl Client {
     pub(crate) async fn enter_room(&self) -> Result<()> {
-        let protover = if self.compression { 2 } else { 1 };
         let req = json!({
             "uid": self.uid,
             "roomid": self.room_id,
-            "protover": protover,
+            "protover": 2,
             "platform": "web",
             "clientver": "1.8.2",
             "type": 2,

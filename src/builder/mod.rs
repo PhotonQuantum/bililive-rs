@@ -10,7 +10,6 @@ mod types;
 
 pub struct ClientBuilder {
     http: reqwest::Client,
-    compression: bool,
     room_id: Option<u64>,
     uid: Option<u64>,
     token: Option<String>,
@@ -36,7 +35,6 @@ impl ClientBuilder {
     pub fn new_with_http(http: reqwest::Client) -> Self {
         Self {
             http,
-            compression: false,
             room_id: None,
             uid: None,
             token: None,
@@ -46,7 +44,6 @@ impl ClientBuilder {
         }
     }
 
-    setter_copy!(compression, bool);
     setter_copy!(tx_buffer, usize);
     setter_option_copy!(room_id, u64);
     setter_option_copy!(uid, u64);
@@ -106,7 +103,6 @@ impl ClientBuilder {
                 .ok_or_else(|| BililiveError::Build(String::from("token")))?,
             self.servers
                 .ok_or_else(|| BililiveError::Build(String::from("servers")))?,
-            self.compression,
             self.tx_buffer,
             self.callback
                 .map(Arc::from)

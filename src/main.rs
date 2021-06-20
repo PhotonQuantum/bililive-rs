@@ -15,7 +15,6 @@ async fn main() -> Result<()> {
         .by_uid(419220)
         .await?
         .callback(Box::new(callback))
-        .compression(false)
         .fetch_conf()
         .await?
         .servers(&["wss://broadcastlv.chat.bilibili.com/sub".to_string()])
