@@ -1,10 +1,12 @@
-use crate::{ClientBuilder, Client, Packet};
 use std::sync::{Arc, Mutex};
+
 use tokio::time::Duration;
+
+use crate::{Client, ClientBuilder, Packet};
 
 struct TestClient {
     client: Client,
-    received: Arc<Mutex<Vec<Packet>>>
+    received: Arc<Mutex<Vec<Packet>>>,
 }
 
 impl TestClient {
@@ -19,31 +21,28 @@ impl TestClient {
             .await
             .unwrap()
             .servers(&["wss://broadcastlv.chat.bilibili.com/sub".to_string()])
-            .callback(Box::new(move |pack|{
+            .callback(Box::new(move |pack| {
                 received_clone.lock().unwrap().push(pack);
             }))
             .build()
             .expect("unable to build client");
-        Self {
-            client,
-            received
-        }
+        Self { client, received }
     }
     fn received(&self) -> Vec<Packet> {
         self.received.lock().unwrap().clone()
     }
 }
 
-#[tokio::test(flavor="multi_thread", worker_threads=3)]
+#[tokio::test(flavor = "multi_thread", worker_threads = 3)]
 async fn must_run_client() {
     let mut test_client = TestClient::new(419220).await;
     test_client.client.connect().await.expect("can't connect");
     tokio::time::sleep(Duration::from_secs(5)).await;
     test_client.client.close().await.expect("can't close");
-    assert!(test_client.received().len()>0, "no package received");
+    assert!(test_client.received().len() > 0, "no package received");
 }
 
-#[tokio::test(flavor="multi_thread", worker_threads=3)]
+#[tokio::test(flavor = "multi_thread", worker_threads = 3)]
 async fn must_reuse_client() {
     let mut test_client = TestClient::new(419220).await;
     test_client.client.connect().await.expect("can't connect");
