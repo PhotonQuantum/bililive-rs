@@ -18,7 +18,9 @@ async fn main() -> Result<()> {
         .compression(false)
         .build()?;
     client.connect().await?;
+    println!("connected");
     client.join().await?;
+    println!("joined");
 
     Ok(())
 }

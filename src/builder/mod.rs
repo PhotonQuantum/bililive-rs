@@ -13,6 +13,7 @@ pub struct ClientBuilder {
     compression: bool,
     room_id: Option<u64>,
     uid: u64,
+    tx_buffer: usize,
     callback: Option<Box<dyn Fn(Packet) + Send + Sync>>,
 }
 
@@ -36,12 +37,14 @@ impl ClientBuilder {
             compression: false,
             room_id: None,
             uid: 0,
+            tx_buffer: 32,
             callback: None,
         }
     }
 
     setter_copy!(compression, bool);
     setter_copy!(uid, u64);
+    setter_copy!(tx_buffer, usize);
     setter_option_copy!(room_id, u64);
     setter_option_copy!(callback, Box<dyn Fn(Packet) + Send + Sync>);
 
@@ -70,6 +73,7 @@ impl ClientBuilder {
                 .ok_or_else(|| BililiveError::Build(String::from("room_id")))?,
             self.uid,
             self.compression,
+            self.tx_buffer,
             self.callback
                 .map(Arc::from)
                 .ok_or_else(|| BililiveError::Build(String::from("callback")))?,
