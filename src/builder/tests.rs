@@ -47,10 +47,12 @@ async fn must_build_client_real() {
     let callback = |_pack| {};
     ClientBuilder::new()
         .by_uid(419220)
-        .await?
+        .await
+        .unwrap()
         .callback(Box::new(callback))
         .fetch_conf()
-        .await?
+        .await
+        .unwrap()
         .build()
         .expect("unable to build client");
 }

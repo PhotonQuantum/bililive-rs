@@ -16,6 +16,8 @@ use crate::packet::Packet;
 mod actions;
 mod send;
 mod tasks;
+#[cfg(test)]
+mod tests;
 
 type TxType = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
 type RxType = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
