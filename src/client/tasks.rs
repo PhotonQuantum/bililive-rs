@@ -55,10 +55,8 @@ impl Client {
                             IncompleteResult::Ok((remaining, raw)) => {
                                 println!("packet parsed, {} bytes remaining", remaining.len());
 
-                                let remaining_len = remaining.len();
-                                let split_pos = buf.len() - remaining_len;
-                                buf.copy_within(split_pos.., 0);
-                                buf.truncate(remaining_len);
+                                let consume_len = buf.len() - remaining.len();
+                                drop(buf.drain(..consume_len));
 
                                 let pack = Packet::from(raw);
                                 if pack.op() == Operation::HeartBeatResponse {
