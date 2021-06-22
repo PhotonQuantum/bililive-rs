@@ -26,6 +26,12 @@ pub enum ParseError {
 }
 
 #[derive(Debug, Error)]
+pub enum StreamError {
+    #[error("stream is closed")]
+    AlreadyClosed,
+}
+
+#[derive(Debug, Error)]
 pub enum BililiveError {
     #[error("http error: {0}")]
     Reqwest(#[from] reqwest::Error),
