@@ -15,12 +15,16 @@ mod types;
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Packet {
     op: Operation,
+    proto: Protocol,
     data: Vec<u8>,
 }
 
 impl Packet {
     pub fn op(&self) -> Operation {
         self.op
+    }
+    pub fn proto(&self) -> Protocol {
+        self.proto
     }
     pub fn bytes(&self) -> &[u8] {
         &self.data
@@ -42,7 +46,14 @@ impl From<RawPacket> for Packet {
     fn from(pack: RawPacket) -> Self {
         Packet {
             op: pack.op,
+            proto: pack.protocol_version,
             data: pack.data,
         }
+    }
+}
+
+impl From<Packet> for RawPacket {
+    fn from(pack: Packet) -> Self {
+        RawPacket::new(pack.op, pack.proto, pack.data)
     }
 }
