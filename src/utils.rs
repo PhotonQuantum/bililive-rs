@@ -34,9 +34,9 @@ macro_rules! while_let_kill {
         loop {
             let fut = $e;
             let kill_fut = $kill;
-            pin_mut!(fut);
-            pin_mut!(kill_fut);
-            match future::select(fut, kill_fut).await {
+            tokio::pin!(fut);
+            tokio::pin!(kill_fut);
+            match futures_util::future::select(fut, kill_fut).await {
                 Either::Left(($p, _)) => $blk,
                 _ => break,
             }
