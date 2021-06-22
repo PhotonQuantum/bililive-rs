@@ -3,8 +3,7 @@ use std::sync::atomic::Ordering::Relaxed;
 use std::sync::Arc;
 
 use futures_util::future::Either;
-use futures_util::{future, SinkExt, StreamExt};
-use pin_utils::pin_mut;
+use futures_util::{SinkExt, StreamExt};
 use tokio::sync::{broadcast, mpsc};
 use tokio_tungstenite::tungstenite::Message;
 
