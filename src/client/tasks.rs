@@ -2,7 +2,6 @@ use std::sync::atomic::AtomicI32;
 use std::sync::atomic::Ordering::Relaxed;
 use std::sync::Arc;
 
-use futures_util::future::Either;
 use futures_util::{SinkExt, StreamExt};
 use tokio::sync::{broadcast, mpsc};
 use tokio_tungstenite::tungstenite::Message;
