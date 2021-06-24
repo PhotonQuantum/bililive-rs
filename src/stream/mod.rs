@@ -1,30 +1,45 @@
 use std::pin::Pin;
+use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use crossbeam::queue::ArrayQueue;
+use futures::stream::{SplitSink, SplitStream};
 use futures::{sink::Sink, stream::Stream};
-use tokio::sync::mpsc;
+use tokio::net::TcpStream;
+use tokio::sync::{broadcast, mpsc};
+use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
 use crate::errors::StreamError;
+use crate::packet::raw::RawPacket;
 use crate::packet::Packet;
+use crate::stream::channel::ConnEvent;
 
 use self::state::*;
 use self::waker::*;
-use crate::packet::raw::RawPacket;
-use tokio_tungstenite::tungstenite::Message;
 
+mod channel;
 mod state;
 mod tasks;
 mod waker;
 
-type Result<T> = std::result::Result<T, StreamError>;
+pub(crate) type WsTxType = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
+pub(crate) type WsRxType = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
+pub(crate) type ConnTxType = broadcast::Sender<ConnEvent>;
+pub(crate) type ConnRxType = broadcast::Receiver<ConnEvent>;
+pub(crate) type SinkTxType = mpsc::Sender<Message>;
+pub(crate) type SinkRxType = mpsc::Receiver<Message>;
+pub(crate) type Result<T> = std::result::Result<T, StreamError>;
 type StdResult<T, E> = std::result::Result<T, E>;
 
 pub struct BililiveStream {
-    waker: WakerProxy,                     // rx/tx wakers
-    state: StreamStateStore,               // connection state
-    rx_buffer: ArrayQueue<Result<Packet>>, // buffer for incoming packets
-    tx_sender: mpsc::Sender<Message>,      // sender of tx channel (receiver is in TxTask)
+    waker: WakerProxy,
+    // rx/tx wakers
+    state: StreamStateStore,
+    // connection state
+    rx_buffer: Arc<ArrayQueue<Result<Packet>>>,
+    // buffer for incoming packets
+    tx_sender: mpsc::Sender<Message>, // sender of tx channel (receiver is in TxTask)
 }
 
 impl BililiveStream {
@@ -32,7 +47,7 @@ impl BililiveStream {
         Self {
             waker: Default::default(),
             state: Default::default(),
-            rx_buffer: ArrayQueue::new(32),
+            rx_buffer: Arc::new(ArrayQueue::new(32)),
             tx_sender: todo!(),
         }
     }
