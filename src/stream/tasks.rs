@@ -24,18 +24,13 @@ use crate::stream::waker::{WakerProxy, WakeMode};
 // tx_buffer: tx message buffer
 // conn_rx: connection event rx
 // conn_state: stream connection state
-async fn heart_beat_task(
-    heart_beat: &Value,
+pub(crate) async fn heart_beat_task(
     tx_buffer: SinkTxType,
     mut conn_rx: ConnRxType,
     conn_state: &StreamStateStore,
 ) {
     let mut ticker = tokio::time::interval(Duration::from_secs(30));
-    let msg = Message::binary(RawPacket::new(
-        Operation::RoomEnter,
-        Protocol::Json,
-        serde_json::to_vec(heart_beat).unwrap(),
-    ));
+    let msg = Message::binary(RawPacket::new(Operation::HeartBeat, Protocol::Json, vec![]));
     loop {
         let fut = ticker.tick();
         let conn_fut = conn_rx.recv();
