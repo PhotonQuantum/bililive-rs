@@ -19,6 +19,7 @@ use crate::{
 
 use super::channel::ConnEvent;
 use super::Result;
+use crate::stream::waker::{WakerProxy, WakeMode};
 
 // tx_buffer: tx message buffer
 // conn_rx: connection event rx
@@ -60,12 +61,14 @@ async fn heart_beat_task(
 // ws_rx_sender: websocket rx will be sent through this channel (a receipt sender is attached)
 // conn_(tx, rx): connection event channel
 // conn_state: stream connection state
+// waker: waker proxy
 async fn conn_task(
     servers: Vec<String>,
     ws_tx_sender: mpsc::Sender<(WsTxType, oneshot::Sender<()>)>,
     ws_rx_sender: mpsc::Sender<(WsRxType, oneshot::Sender<()>)>,
     conn: (ConnTxType, ConnRxType),
     conn_state: &StreamStateStore,
+    waker: Arc<WakerProxy>
 ) {
     let (conn_tx, mut conn_rx) = conn;
     loop {
@@ -85,6 +88,8 @@ async fn conn_task(
         // TODO send room enter message
 
         conn_state.store(StreamState::Active);
+        // ready to send message
+        waker.wake(WakeMode::Tx);
 
         match conn_rx.recv().await {
             Ok(ConnEvent::Failure) => continue,
@@ -97,11 +102,13 @@ async fn conn_task(
 // conn_(tx, rx): connection event channel
 // tx_buffer: tx message buffer
 // conn_state: stream connection state
+// waker: waker proxy
 async fn tx_task(
     mut ws_tx_receiver: mpsc::Receiver<(WsTxType, oneshot::Sender<()>)>,
     mut tx_buffer: SinkRxType,
     conn: (ConnTxType, ConnRxType),
     conn_state: &StreamStateStore,
+    waker: Arc<WakerProxy>
 ) {
     let (conn_tx, mut conn_rx) = conn;
 
@@ -115,7 +122,9 @@ async fn tx_task(
             tokio::pin!(conn_fut);
             match select(fut, conn_fut).await {
                 Either::Left((Some(msg), _)) => {
-                    if ws_tx.send(msg).await.is_err() {
+                    if ws_tx.send(msg).await.map(|_|{
+                        waker.wake(WakeMode::Tx);
+                    }).is_err() {
                         // connection failed
                         if let StreamState::Active = conn_state.load() {
                             conn_state.store(StreamState::Establishing);
@@ -143,11 +152,13 @@ async fn tx_task(
 // conn_(tx, rx): connection event channel
 // tx_buffer: rx packet buffer
 // conn_state: stream connection state
+// waker: waker proxy
 async fn rx_task(
     mut ws_rx_receiver: mpsc::Receiver<(WsRxType, oneshot::Sender<()>)>,
     rx_buffer: Arc<ArrayQueue<Result<Packet>>>,
     conn: (ConnTxType, ConnRxType),
     conn_state: &StreamStateStore,
+    waker: Arc<WakerProxy>
 ) {
     let (conn_tx, mut conn_rx) = conn;
 
@@ -173,6 +184,8 @@ async fn rx_task(
 
                                 let pack = Packet::from(raw);
                                 rx_buffer.push(Ok(pack)).unwrap();
+
+                                waker.wake(WakeMode::Rx);
                             }
                             IncompleteResult::Incomplete(needed) => {
                                 println!("incomplete packet, {:?} needed", needed);
