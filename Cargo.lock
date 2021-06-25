@@ -42,6 +42,7 @@ dependencies = [
  "futures",
  "futures-util",
  "nom",
+ "rand",
  "reqwest",
  "serde",
  "serde_json",

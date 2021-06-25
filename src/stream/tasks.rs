@@ -1,24 +1,27 @@
 use std::sync::Arc;
 
 use crossbeam::queue::ArrayQueue;
-use futures::{SinkExt, StreamExt};
 use futures::future::Either;
+use futures::{SinkExt, StreamExt};
 use futures_util::future::select;
 use tokio::sync::{mpsc, oneshot};
 use tokio::time::Duration;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
 
+use crate::raw::RawPacket;
+use crate::stream::state::{StreamState, StreamStateStore};
+use crate::stream::waker::{WakeMode, WakerProxy};
 use crate::{
     ConnRxType, ConnTxType, IncompleteResult, Operation, Packet, Protocol, SinkRxType, SinkTxType,
     WsRxType, WsTxType,
 };
-use crate::raw::RawPacket;
-use crate::stream::state::{StreamState, StreamStateStore};
-use crate::stream::waker::{WakeMode, WakerProxy};
 
 use super::channel::ConnEvent;
 use super::Result;
+use crate::stream::config::StreamConfig;
+use crate::stream::utils::room_enter_message;
+use std::time::Instant;
 
 // tx_buffer: tx message buffer
 // conn_rx: connection event rx
@@ -57,7 +60,7 @@ pub(crate) async fn heart_beat_task(
 // conn_state: stream connection state
 // waker: waker proxy
 pub(crate) async fn conn_task(
-    servers: Vec<String>,
+    config: StreamConfig,
     ws_tx_sender: mpsc::Sender<(WsTxType, oneshot::Sender<()>)>,
     ws_rx_sender: mpsc::Sender<(WsRxType, oneshot::Sender<()>)>,
     conn: (ConnTxType, ConnRxType),
@@ -65,11 +68,37 @@ pub(crate) async fn conn_task(
     waker: Arc<WakerProxy>,
 ) {
     let (conn_tx, mut conn_rx) = conn;
+    let mut servers = config.servers.iter().cycle();
+
+    let mut last_connect = None;
+    let mut fail_count: u32 = 0;
     loop {
-        // TODO pick a server
-        let server = servers.first().unwrap();
+        if let Some(last_connect) = last_connect {
+            let now = Instant::now();
+            if now - last_connect < config.retry.min_conn_duration {
+                fail_count += 1;
+            } else {
+                fail_count = 1;
+            }
+            let maybe_delay = (*config.retry.retry_policy)(fail_count);
+            if let Some(delay) = maybe_delay {
+                tokio::time::sleep(delay).await
+            } else {
+                // disconnect
+                todo!()
+            }
+        }
+
+        last_connect = Some(Instant::now());
+
+        let server = servers.next().unwrap();
         let (ws, _) = connect_async(server).await.unwrap();
-        let (tx, rx) = ws.split();
+        let (mut tx, rx) = ws.split();
+
+        // send room enter message before putting it to tx task
+        if tx.send(room_enter_message(&config)).await.is_err() {
+            continue;
+        }
 
         let (tx_receipt_sender, tx_receipt_receiver) = oneshot::channel();
         let (rx_receipt_sender, rx_receipt_receiver) = oneshot::channel();
@@ -78,8 +107,6 @@ pub(crate) async fn conn_task(
         let (receipt_tx, receipt_rx) = tokio::join!(tx_receipt_receiver, rx_receipt_receiver);
         receipt_tx.unwrap();
         receipt_rx.unwrap();
-
-        // TODO send room enter message
 
         conn_state.store(StreamState::Active);
         // ready to send message
