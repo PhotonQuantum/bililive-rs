@@ -1,25 +1,24 @@
 use std::sync::Arc;
 
 use crossbeam::queue::ArrayQueue;
-use futures::future::Either;
 use futures::{SinkExt, StreamExt};
+use futures::future::Either;
 use futures_util::future::select;
-use serde_json::Value;
 use tokio::sync::{mpsc, oneshot};
 use tokio::time::Duration;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
 
-use crate::raw::RawPacket;
-use crate::stream::state::{StreamState, StreamStateStore};
 use crate::{
     ConnRxType, ConnTxType, IncompleteResult, Operation, Packet, Protocol, SinkRxType, SinkTxType,
     WsRxType, WsTxType,
 };
+use crate::raw::RawPacket;
+use crate::stream::state::{StreamState, StreamStateStore};
+use crate::stream::waker::{WakeMode, WakerProxy};
 
 use super::channel::ConnEvent;
 use super::Result;
-use crate::stream::waker::{WakerProxy, WakeMode};
 
 // tx_buffer: tx message buffer
 // conn_rx: connection event rx
@@ -27,7 +26,7 @@ use crate::stream::waker::{WakerProxy, WakeMode};
 pub(crate) async fn heart_beat_task(
     tx_buffer: SinkTxType,
     mut conn_rx: ConnRxType,
-    conn_state: &StreamStateStore,
+    conn_state: Arc<StreamStateStore>,
 ) {
     let mut ticker = tokio::time::interval(Duration::from_secs(30));
     let msg = Message::binary(RawPacket::new(Operation::HeartBeat, Protocol::Json, vec![]));
@@ -38,7 +37,7 @@ pub(crate) async fn heart_beat_task(
         tokio::pin!(conn_fut);
         match select(fut, conn_fut).await {
             Either::Left(_) => {
-                if let StreamState::Active = conn_state.load() {
+                if conn_state.load().is_active() {
                     tx_buffer.send(msg.clone()).await.unwrap();
                 }
             }
@@ -57,13 +56,13 @@ pub(crate) async fn heart_beat_task(
 // conn_(tx, rx): connection event channel
 // conn_state: stream connection state
 // waker: waker proxy
-async fn conn_task(
+pub(crate) async fn conn_task(
     servers: Vec<String>,
     ws_tx_sender: mpsc::Sender<(WsTxType, oneshot::Sender<()>)>,
     ws_rx_sender: mpsc::Sender<(WsRxType, oneshot::Sender<()>)>,
     conn: (ConnTxType, ConnRxType),
-    conn_state: &StreamStateStore,
-    waker: Arc<WakerProxy>
+    conn_state: Arc<StreamStateStore>,
+    waker: Arc<WakerProxy>,
 ) {
     let (conn_tx, mut conn_rx) = conn;
     loop {
@@ -74,8 +73,8 @@ async fn conn_task(
 
         let (tx_receipt_sender, tx_receipt_receiver) = oneshot::channel();
         let (rx_receipt_sender, rx_receipt_receiver) = oneshot::channel();
-        ws_tx_sender.send((tx, tx_receipt_sender)).await;
-        ws_rx_sender.send((rx, rx_receipt_sender)).await;
+        assert!(ws_tx_sender.send((tx, tx_receipt_sender)).await.is_ok());
+        assert!(ws_rx_sender.send((rx, rx_receipt_sender)).await.is_ok());
         let (receipt_tx, receipt_rx) = tokio::join!(tx_receipt_receiver, rx_receipt_receiver);
         receipt_tx.unwrap();
         receipt_rx.unwrap();
@@ -98,12 +97,12 @@ async fn conn_task(
 // tx_buffer: tx message buffer
 // conn_state: stream connection state
 // waker: waker proxy
-async fn tx_task(
+pub(crate) async fn tx_task(
     mut ws_tx_receiver: mpsc::Receiver<(WsTxType, oneshot::Sender<()>)>,
     mut tx_buffer: SinkRxType,
     conn: (ConnTxType, ConnRxType),
-    conn_state: &StreamStateStore,
-    waker: Arc<WakerProxy>
+    conn_state: Arc<StreamStateStore>,
+    waker: Arc<WakerProxy>,
 ) {
     let (conn_tx, mut conn_rx) = conn;
 
@@ -117,14 +116,15 @@ async fn tx_task(
             tokio::pin!(conn_fut);
             match select(fut, conn_fut).await {
                 Either::Left((Some(msg), _)) => {
-                    if ws_tx.send(msg).await.map(|_|{
-                        waker.wake(WakeMode::Tx);
-                    }).is_err() {
+                    let send_result = ws_tx.send(msg).await;
+                    if send_result.is_err() {
                         // connection failed
-                        if let StreamState::Active = conn_state.load() {
+                        if conn_state.load().is_active() {
                             conn_state.store(StreamState::Establishing);
                             conn_tx.send(ConnEvent::Failure).unwrap();
                         }
+                    } else {
+                        waker.wake(WakeMode::Tx);
                     }
                 }
                 Either::Right((Ok(event), _)) => match event {
@@ -133,7 +133,7 @@ async fn tx_task(
                 },
                 _ => {
                     // connection failed
-                    if let StreamState::Active = conn_state.load() {
+                    if conn_state.load().is_active() {
                         conn_state.store(StreamState::Establishing);
                         conn_tx.send(ConnEvent::Failure).unwrap();
                     }
@@ -148,12 +148,12 @@ async fn tx_task(
 // tx_buffer: rx packet buffer
 // conn_state: stream connection state
 // waker: waker proxy
-async fn rx_task(
+pub(crate) async fn rx_task(
     mut ws_rx_receiver: mpsc::Receiver<(WsRxType, oneshot::Sender<()>)>,
     rx_buffer: Arc<ArrayQueue<Result<Packet>>>,
     conn: (ConnTxType, ConnRxType),
-    conn_state: &StreamStateStore,
-    waker: Arc<WakerProxy>
+    conn_state: Arc<StreamStateStore>,
+    waker: Arc<WakerProxy>,
 ) {
     let (conn_tx, mut conn_rx) = conn;
 
@@ -187,7 +187,7 @@ async fn rx_task(
                             }
                             IncompleteResult::Err(_) => {
                                 // connection failed
-                                if let StreamState::Active = conn_state.load() {
+                                if conn_state.load().is_active() {
                                     conn_state.store(StreamState::Establishing);
                                     conn_tx.send(ConnEvent::Failure).unwrap();
                                 }
@@ -201,7 +201,7 @@ async fn rx_task(
                 },
                 _ => {
                     // connection failed
-                    if let StreamState::Active = conn_state.load() {
+                    if conn_state.load().is_active() {
                         conn_state.store(StreamState::Establishing);
                         conn_tx.send(ConnEvent::Failure).unwrap();
                     }

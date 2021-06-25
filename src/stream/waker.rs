@@ -8,7 +8,7 @@ pub(crate) enum WakeMode {
     Rx,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub(crate) struct WakerProxy {
     tx_waker: AtomicWaker,
     rx_waker: AtomicWaker,
