@@ -3,30 +3,31 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use crossbeam::queue::ArrayQueue;
-use futures::{sink::Sink, stream::Stream};
 use futures::stream::{SplitSink, SplitStream};
+use futures::{sink::Sink, stream::Stream};
 use serde_json::{json, Value};
 use tokio::net::TcpStream;
 use tokio::sync::{broadcast, mpsc};
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
 use crate::errors::StreamError;
-use crate::packet::Packet;
 use crate::packet::raw::RawPacket;
+use crate::packet::Packet;
 use crate::stream::channel::ConnEvent;
 use crate::stream::config::StreamConfig;
-use crate::stream::tasks::{conn_task, rx_task, tx_task, heart_beat_task};
+use crate::stream::tasks::{conn_task, heart_beat_task, rx_task, tx_task};
 
 use self::state::*;
 use self::waker::*;
 use tokio::task::JoinHandle;
 
 mod channel;
+mod config;
 mod state;
 mod tasks;
+mod utils;
 mod waker;
-mod config;
 
 pub(crate) type WsTxType = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
 pub(crate) type WsRxType = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
@@ -56,7 +57,7 @@ pub struct BililiveStream {
     tx_sender: mpsc::Sender<Message>,
     // sender of tx channel (receiver is in TxTask)
     config: StreamConfig,
-    handles: Handles
+    handles: Handles,
 }
 
 impl BililiveStream {
@@ -73,16 +74,35 @@ impl BililiveStream {
         let tx_task = {
             let conn_tx = conn_tx.clone();
             let conn_rx = conn_tx.subscribe();
-            tx_task(ws_tx_receiver, tx_buffer_receiver, (conn_tx, conn_rx), state.clone(), waker.clone())
+            tx_task(
+                ws_tx_receiver,
+                tx_buffer_receiver,
+                (conn_tx, conn_rx),
+                state.clone(),
+                waker.clone(),
+            )
         };
         let rx_task = {
             let conn_tx = conn_tx.clone();
             let conn_rx = conn_tx.subscribe();
-            rx_task(ws_rx_receiver, rx_buffer.clone(), (conn_tx, conn_rx), state.clone(), waker.clone())
+            rx_task(
+                ws_rx_receiver,
+                rx_buffer.clone(),
+                (conn_tx, conn_rx),
+                state.clone(),
+                waker.clone(),
+            )
         };
         let conn_task = {
             let conn_rx = conn_tx.subscribe();
-            conn_task(config.servers.clone(), ws_tx_sender, ws_rx_sender, (conn_tx, conn_rx), state.clone(), waker.clone())
+            conn_task(
+                config.clone(),
+                ws_tx_sender,
+                ws_rx_sender,
+                (conn_tx, conn_rx),
+                state.clone(),
+                waker.clone(),
+            )
         };
         let heart_beat_task = heart_beat_task(tx_buffer_sender.clone(), conn_rx, state.clone());
 
@@ -90,7 +110,7 @@ impl BililiveStream {
             tx_task: tokio::spawn(tx_task),
             rx_task: tokio::spawn(rx_task),
             conn_task: tokio::spawn(conn_task),
-            heart_beat_task: tokio::spawn(heart_beat_task)
+            heart_beat_task: tokio::spawn(heart_beat_task),
         };
 
         Self {
@@ -99,7 +119,7 @@ impl BililiveStream {
             rx_buffer,
             tx_sender: tx_buffer_sender,
             config: config.clone(),
-            handles
+            handles,
         }
     }
 
