@@ -15,6 +15,9 @@ impl Default for StreamStateStore {
 }
 
 impl StreamStateStore {
+    pub(crate) fn new() -> Self {
+        Default::default()
+    }
     pub(crate) fn load(&self) -> StreamState {
         self.data.load(SeqCst).into()
     }
