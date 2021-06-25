@@ -33,7 +33,7 @@ pub(crate) type Result<T> = std::result::Result<T, StreamError>;
 type StdResult<T, E> = std::result::Result<T, E>;
 
 pub struct BililiveStream {
-    waker: WakerProxy,
+    waker: Arc<WakerProxy>,
     // rx/tx wakers
     state: StreamStateStore,
     // connection state
