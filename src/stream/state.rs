@@ -2,7 +2,7 @@ use std::sync::atomic::AtomicU8;
 use std::sync::atomic::Ordering::SeqCst;
 
 #[derive(Debug)]
-pub(crate) struct StreamStateStore {
+pub struct StreamStateStore {
     data: AtomicU8,
 }
 
@@ -15,20 +15,20 @@ impl Default for StreamStateStore {
 }
 
 impl StreamStateStore {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Default::default()
     }
-    pub(crate) fn load(&self) -> StreamState {
+    pub fn load(&self) -> StreamState {
         self.data.load(SeqCst).into()
     }
-    pub(crate) fn store(&self, state: StreamState) {
+    pub fn store(&self, state: StreamState) {
         self.data.store(state as u8, SeqCst);
     }
 }
 
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub(crate) enum StreamState {
+pub enum StreamState {
     // The connection is active.
     Active = 1,
     // The connection is being established (connecting or retrying)
@@ -55,7 +55,7 @@ impl Default for StreamState {
 }
 
 impl StreamState {
-    pub(crate) fn is_active(&self) -> bool {
+    pub fn is_active(self) -> bool {
         matches!(self, StreamState::Active)
     }
 }

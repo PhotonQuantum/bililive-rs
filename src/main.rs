@@ -16,7 +16,7 @@ async fn test_func(stream: &mut BililiveStream) {
                 }
             }
             Err(e) => {
-                println!("err: {:?}", e)
+                println!("err: {:?}", e);
             }
         }
     }

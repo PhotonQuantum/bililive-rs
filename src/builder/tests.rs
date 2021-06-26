@@ -31,25 +31,21 @@ fn must_parse_conf() {
 
 #[tokio::test]
 async fn must_build_client() {
-    let callback = |_pack| {};
     ConfigBuilder::new()
         .room_id(1016)
         .uid(0)
         .servers(&["wss://".to_string()])
         .token("asdf")
-        .callback(Box::new(callback))
         .build()
         .expect("unable to build client");
 }
 
 #[tokio::test]
 async fn must_build_client_real() {
-    let callback = |_pack| {};
     ConfigBuilder::new()
         .by_uid(419220)
         .await
         .unwrap()
-        .callback(Box::new(callback))
         .fetch_conf()
         .await
         .unwrap()
