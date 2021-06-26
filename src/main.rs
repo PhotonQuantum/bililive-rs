@@ -1,13 +1,14 @@
+use std::time::Duration;
+
 use anyhow::Result;
+use futures::StreamExt;
 use serde_json::Value;
 
-use bililive_lib::{ConfigBuilder, Packet, BililiveStream, StreamError};
-use futures::StreamExt;
-use std::time::Duration;
+use bililive_lib::{BililiveStream, ConfigBuilder};
 
 async fn test_func(stream: &mut BililiveStream) {
     while let Some(e) = stream.next().await {
-        match e{
+        match e {
             Ok(packet) => {
                 println!("raw: {:?}", packet);
                 if let Ok(json) = packet.json::<Value>() {
@@ -36,7 +37,7 @@ async fn main() -> Result<()> {
     println!("servers: {:#?}", config.servers);
 
     let mut stream = BililiveStream::new(config);
-    tokio::time::timeout(Duration::from_secs(10), test_func(&mut stream)).await;
+    let _ = tokio::time::timeout(Duration::from_secs(10), test_func(&mut stream)).await;
     println!("disconnecting");
     stream.close();
     println!("joining");

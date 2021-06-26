@@ -1,9 +1,9 @@
+use std::fmt::{Debug, Formatter, Result as FmtResult};
+use std::sync::Arc;
 use std::time::Duration;
 
 use rand::distributions::Uniform;
 use rand::{thread_rng, Rng};
-use std::fmt::{Debug, Formatter, Result as FmtResult};
-use std::sync::Arc;
 
 pub type RetryPolicy = Arc<dyn Fn(u32) -> Option<Duration> + Send + Sync>;
 
@@ -22,8 +22,20 @@ pub struct StreamConfig {
 }
 
 impl StreamConfig {
-    pub fn new(room_id: u64, uid: u64, token: &str, servers: &[String], retry: RetryConfig) -> Self {
-        StreamConfig { room_id, uid, token: token.to_string(), servers: servers.to_vec(), retry }
+    pub fn new(
+        room_id: u64,
+        uid: u64,
+        token: &str,
+        servers: &[String],
+        retry: RetryConfig,
+    ) -> Self {
+        StreamConfig {
+            room_id,
+            uid,
+            token: token.to_string(),
+            servers: servers.to_vec(),
+            retry,
+        }
     }
 }
 

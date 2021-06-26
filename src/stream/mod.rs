@@ -5,22 +5,20 @@ use std::task::{Context, Poll};
 use crossbeam::queue::ArrayQueue;
 use futures::stream::{SplitSink, SplitStream};
 use futures::{sink::Sink, stream::Stream};
-use serde_json::{json, Value};
 use tokio::net::TcpStream;
 use tokio::sync::{broadcast, mpsc};
+use tokio::task::JoinHandle;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
 use crate::errors::StreamError;
 use crate::packet::raw::RawPacket;
 use crate::packet::Packet;
-use self::channel::ConnEvent;
-pub use self::config::*;
-use self::tasks::{conn_task, heart_beat_task, rx_task, tx_task};
 
+pub use self::config::*;
 use self::state::*;
+use self::tasks::{conn_task, heart_beat_task, rx_task, tx_task};
 use self::waker::*;
-use tokio::task::JoinHandle;
 
 mod channel;
 mod config;
@@ -37,6 +35,12 @@ pub(crate) type SinkTxType = mpsc::Sender<Message>;
 pub(crate) type SinkRxType = mpsc::Receiver<Message>;
 pub(crate) type Result<T> = std::result::Result<T, StreamError>;
 type StdResult<T, E> = std::result::Result<T, E>;
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub(crate) enum ConnEvent {
+    Close,
+    Failure,
+}
 
 #[derive(Debug)]
 pub struct Handles {
