@@ -118,21 +118,9 @@ impl BililiveStream {
             state,
             rx_buffer,
             tx_sender: tx_buffer_sender,
-            config: config,
+            config,
             handles,
         }
-    }
-
-    fn room_enter_message(config: &StreamConfig) -> Value {
-        json!({
-            "uid": config.uid,
-            "roomid": config.room_id,
-            "protover": 2,
-            "platform": "web",
-            "clientver": "1.8.2",
-            "type": 2,
-            "key": config.token
-        })
     }
 }
 
