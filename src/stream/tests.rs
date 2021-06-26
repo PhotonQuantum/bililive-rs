@@ -27,7 +27,7 @@ async fn must_stream() {
     };
     // err means timeout indicating there's no early stop on stream
     assert!(
-        tokio::time::timeout(Duration::from_secs(10), stream_try)
+        tokio::time::timeout(Duration::from_secs(3), stream_try)
             .await
             .is_err(),
         "stream error"
@@ -48,7 +48,7 @@ async fn must_stream() {
     };
     // err means timeout indicating there's no early stop on stream
     assert!(
-        tokio::time::timeout(Duration::from_secs(3), stream_try)
+        tokio::time::timeout(Duration::from_secs(1), stream_try)
             .await
             .is_err(),
         "stream error"
