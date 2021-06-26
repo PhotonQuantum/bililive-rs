@@ -1,11 +1,11 @@
 use std::sync::Arc;
 use std::time::Instant;
 
-use crossbeam::queue::ArrayQueue;
 use futures::future::Either;
 use futures::{SinkExt, StreamExt};
 use futures_util::future::select;
 use log::{debug, info, warn};
+use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::{mpsc, oneshot};
 use tokio::time::Duration;
 use tokio_tungstenite::connect_async;
@@ -202,7 +202,7 @@ pub async fn tx_task(
 // waker: waker proxy
 pub async fn rx_task(
     mut ws_rx_receiver: mpsc::Receiver<(WsRxType, oneshot::Sender<()>)>,
-    rx_buffer: Arc<ArrayQueue<Result<Packet>>>,
+    rx_buffer: mpsc::Sender<Result<Packet>>,
     conn: (ConnTxType, ConnRxType),
     conn_state: Arc<StreamStateStore>,
     waker: Arc<WakerProxy>,
@@ -233,8 +233,14 @@ pub async fn rx_task(
                                 drop(buf.drain(..consume_len));
 
                                 let pack = Packet::from(raw);
-                                if rx_buffer.push(Ok(pack)).is_err() {
-                                    warn!("warn: buffer full, dropping message");
+                                match rx_buffer.try_send(Ok(pack)) {
+                                    Err(TrySendError::Full(_)) => {
+                                        warn!("warn: buffer full, dropping message");
+                                    }
+                                    Err(TrySendError::Closed(_)) => {
+                                        warn!("rx buffer closed");
+                                    }
+                                    _ => {}
                                 }
 
                                 waker.wake(WakeMode::Rx);

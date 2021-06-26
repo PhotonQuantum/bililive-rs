@@ -2,7 +2,6 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
-use crossbeam::queue::ArrayQueue;
 use futures::stream::{SplitSink, SplitStream};
 use futures::{sink::Sink, stream::Stream};
 use tokio::net::TcpStream;
@@ -63,16 +62,19 @@ impl Handles {
 
 #[derive(Debug)]
 pub struct BililiveStream {
-    waker: Arc<WakerProxy>,
     // rx/tx wakers
-    state: Arc<StreamStateStore>,
+    waker: Arc<WakerProxy>,
     // connection state
-    rx_buffer: Arc<ArrayQueue<Result<Packet>>>,
-    // buffer for incoming packets
-    tx_sender: Arc<mpsc::Sender<Message>>,
+    state: Arc<StreamStateStore>,
+    // receiver of rx channel (sender is in RxTask)
+    rx_receiver: mpsc::Receiver<Result<Packet>>,
     // sender of tx channel (receiver is in TxTask)
+    tx_sender: Arc<mpsc::Sender<Message>>,
+    // tx buffer capacity
     tx_buffer_cap: usize,
+    // conn event tx
     conn_tx: broadcast::Sender<ConnEvent>,
+    // task handles
     handles: Handles,
 }
 
@@ -80,12 +82,12 @@ impl BililiveStream {
     pub fn new(config: StreamConfig) -> Self {
         let state = Arc::new(StreamStateStore::new());
         let waker = Arc::new(WakerProxy::new());
-        let rx_buffer = Arc::new(ArrayQueue::new(config.buffer.rx_buffer));
 
         let (ws_tx_sender, ws_tx_receiver) = mpsc::channel(config.buffer.socket_buffer);
         let (ws_rx_sender, ws_rx_receiver) = mpsc::channel(config.buffer.socket_buffer);
         let (conn_tx, conn_rx) = broadcast::channel(config.buffer.conn_event_buffer);
         let (tx_buffer_sender, tx_buffer_receiver) = mpsc::channel(config.buffer.tx_buffer);
+        let (rx_buffer_sender, rx_buffer_receiver) = mpsc::channel(config.buffer.rx_buffer);
 
         let tx_buffer_cap = config.buffer.tx_buffer;
 
@@ -105,7 +107,7 @@ impl BililiveStream {
             let conn_rx = conn_tx.subscribe();
             rx_task(
                 ws_rx_receiver,
-                rx_buffer.clone(),
+                rx_buffer_sender,
                 (conn_tx, conn_rx),
                 state.clone(),
                 waker.clone(),
@@ -134,7 +136,7 @@ impl BililiveStream {
         Self {
             waker,
             state,
-            rx_buffer,
+            rx_receiver: rx_buffer_receiver,
             tx_sender: Arc::new(tx_buffer_sender),
             tx_buffer_cap,
             conn_tx,
@@ -154,15 +156,9 @@ impl BililiveStream {
 impl Stream for BililiveStream {
     type Item = Result<Packet>;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         match self.state.load() {
-            StreamState::Active => self.rx_buffer.pop().map_or_else(
-                || {
-                    self.waker.register(WakeMode::Rx, cx.waker());
-                    Poll::Pending
-                },
-                |item| Poll::Ready(Some(item)),
-            ),
+            StreamState::Active => self.rx_receiver.poll_recv(cx),
             StreamState::Establishing => {
                 self.waker.register(WakeMode::Rx, cx.waker());
                 Poll::Pending
