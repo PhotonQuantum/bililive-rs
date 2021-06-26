@@ -220,7 +220,9 @@ pub(crate) async fn rx_task(
                                 drop(buf.drain(..consume_len));
 
                                 let pack = Packet::from(raw);
-                                rx_buffer.push(Ok(pack)).unwrap();
+                                if rx_buffer.push(Ok(pack)).is_err() {
+                                    println!("warn: buffer full, dropping message");
+                                }
 
                                 waker.wake(WakeMode::Rx);
                             }
