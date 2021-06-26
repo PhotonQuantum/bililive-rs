@@ -1,6 +1,6 @@
 use crate::builder::types::{ConfQueryInner, Resp, RoomQueryInner};
 use crate::errors::{BililiveError, ParseError, Result};
-use crate::{RetryConfig, StreamConfig};
+use crate::{RetryConfig, StreamConfig, BufferConfig};
 
 #[cfg(test)]
 mod tests;
@@ -12,8 +12,8 @@ pub struct ConfigBuilder {
     uid: Option<u64>,
     token: Option<String>,
     servers: Option<Vec<String>>,
-    tx_buffer: usize,
     retry: RetryConfig,
+    buffer: BufferConfig
 }
 
 impl Default for ConfigBuilder {
@@ -37,12 +37,12 @@ impl ConfigBuilder {
             uid: None,
             token: None,
             servers: None,
-            tx_buffer: 32,
             retry: Default::default(),
+            buffer: Default::default()
         }
     }
 
-    setter_copy!(tx_buffer, usize);
+    setter_copy!(buffer, BufferConfig);
     setter_option_copy!(room_id, u64);
     setter_option_copy!(uid, u64);
     setter_clone!(retry, RetryConfig);
@@ -106,6 +106,7 @@ impl ConfigBuilder {
                 .servers
                 .ok_or_else(|| BililiveError::Build(String::from("servers")))?,
             retry: self.retry,
+            buffer: self.buffer
         })
     }
 }

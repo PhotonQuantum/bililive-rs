@@ -68,7 +68,7 @@ pub struct BililiveStream {
     // buffer for incoming packets
     tx_sender: mpsc::Sender<Message>,
     // sender of tx channel (receiver is in TxTask)
-    config: StreamConfig,
+    tx_buffer_cap: usize,
     conn_tx: broadcast::Sender<ConnEvent>,
     handles: Handles,
 }
@@ -77,12 +77,14 @@ impl BililiveStream {
     pub fn new(config: StreamConfig) -> Self {
         let state = Arc::new(StreamStateStore::new());
         let waker = Arc::new(WakerProxy::new());
-        let rx_buffer = Arc::new(ArrayQueue::new(32));
+        let rx_buffer = Arc::new(ArrayQueue::new(config.buffer.rx_buffer));
 
-        let (ws_tx_sender, ws_tx_receiver) = mpsc::channel(32);
-        let (ws_rx_sender, ws_rx_receiver) = mpsc::channel(32);
-        let (conn_tx, conn_rx) = broadcast::channel(32);
-        let (tx_buffer_sender, tx_buffer_receiver) = mpsc::channel(32);
+        let (ws_tx_sender, ws_tx_receiver) = mpsc::channel(config.buffer.socket_buffer);
+        let (ws_rx_sender, ws_rx_receiver) = mpsc::channel(config.buffer.socket_buffer);
+        let (conn_tx, conn_rx) = broadcast::channel(config.buffer.conn_event_buffer);
+        let (tx_buffer_sender, tx_buffer_receiver) = mpsc::channel(config.buffer.tx_buffer);
+
+        let tx_buffer_cap = config.buffer.tx_buffer;
 
         let tx_task = {
             let conn_tx = conn_tx.clone();
@@ -109,7 +111,7 @@ impl BililiveStream {
         let conn_task = {
             let conn_rx = conn_tx.subscribe();
             conn_task(
-                config.clone(),
+                config,
                 ws_tx_sender,
                 ws_rx_sender,
                 (conn_tx.clone(), conn_rx),
@@ -131,7 +133,7 @@ impl BililiveStream {
             state,
             rx_buffer,
             tx_sender: tx_buffer_sender,
-            config,
+            tx_buffer_cap,
             conn_tx,
             handles,
         }
@@ -191,7 +193,7 @@ impl Sink<Packet> for BililiveStream {
     }
 
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<StdResult<(), Self::Error>> {
-        if self.tx_sender.capacity() == 32 {
+        if self.tx_sender.capacity() == self.tx_buffer_cap {
             // Tx buffer is empty.
             Poll::Ready(Ok(()))
         } else {
