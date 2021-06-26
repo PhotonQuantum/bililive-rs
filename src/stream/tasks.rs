@@ -136,7 +136,7 @@ pub(crate) async fn tx_task(
     loop {
         let (mut ws_tx, receipt) = ws_tx_receiver.recv().await.unwrap();
         receipt.send(()).unwrap();
-        let mut drop_conn_rx_once = false;
+        let mut drop_conn_rx_once;
         loop {
             let fut = tx_buffer.recv();
             let conn_fut = conn_rx.recv();
@@ -196,13 +196,14 @@ pub(crate) async fn rx_task(
     loop {
         let (mut ws_rx, receipt) = ws_rx_receiver.recv().await.unwrap();
         receipt.send(()).unwrap();
-        let mut drop_conn_rx_once = false;
+        let mut drop_conn_rx_once;
         let mut buf = vec![];
         loop {
             let fut = ws_rx.next();
             let conn_fut = conn_rx.recv();
             tokio::pin!(fut);
             tokio::pin!(conn_fut);
+            drop_conn_rx_once = false;
             match select(fut, conn_fut).await {
                 Either::Left((Some(Ok(msg)), _)) => {
                     if msg.is_binary() {
