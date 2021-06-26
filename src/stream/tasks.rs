@@ -66,20 +66,23 @@ pub async fn conn_task(
     waker: Arc<WakerProxy>,
 ) {
     let (conn_tx, mut conn_rx) = conn;
-    let mut servers = config.servers.iter().cycle();
+    let mut servers_with_last_connect = config.servers.iter().map(|server| (server, None)).cycle();
 
-    let mut last_connect = None;
     let mut fail_count: u32 = 0;
     loop {
+        println!("connect");
+        let mut server_with_last_connect = servers_with_last_connect.next();
+        let (server, last_connect) = server_with_last_connect.as_mut().unwrap();
         if let Some(last_connect) = last_connect {
             let now = Instant::now();
-            if now - last_connect < config.retry.min_conn_duration {
+            if now - *last_connect < config.retry.min_conn_duration {
                 fail_count += 1;
             } else {
                 fail_count = 1;
             }
             let maybe_delay = (*config.retry.retry_policy)(fail_count);
             if let Some(delay) = maybe_delay {
+                println!("delay");
                 tokio::time::sleep(delay).await;
             } else {
                 // giving up
@@ -88,10 +91,9 @@ pub async fn conn_task(
             }
         }
 
-        last_connect = Some(Instant::now());
+        *last_connect = Some(Instant::now());
 
-        let server = servers.next().unwrap();
-        let (ws, _) = connect_async(server).await.unwrap();
+        let (ws, _) = connect_async(*server).await.unwrap();
         let (mut tx, rx) = ws.split();
 
         // send room enter message before putting it to tx task
