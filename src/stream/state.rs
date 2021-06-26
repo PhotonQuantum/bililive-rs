@@ -50,7 +50,7 @@ impl From<u8> for StreamState {
 
 impl Default for StreamState {
     fn default() -> Self {
-        Self::Terminated
+        Self::Establishing
     }
 }
 
