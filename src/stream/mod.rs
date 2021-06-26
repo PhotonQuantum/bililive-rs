@@ -11,17 +11,16 @@ use tokio::task::JoinHandle;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
+pub use crate::config::*;
 use crate::errors::StreamError;
 use crate::packet::raw::RawPacket;
 use crate::packet::Packet;
 
-pub use self::config::*;
 use self::state::*;
 use self::tasks::{conn_task, heart_beat_task, rx_task, tx_task};
 use self::waker::*;
 
 mod channel;
-mod config;
 mod state;
 mod tasks;
 mod utils;
