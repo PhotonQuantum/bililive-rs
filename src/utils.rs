@@ -29,6 +29,16 @@ macro_rules! setter_option_clone {
 }
 
 #[macro_export]
+macro_rules! setter_clone {
+    ($name: ident, $tyty: ty) => {
+        pub fn $name(mut self, $name: &$tyty) -> Self {
+            self.$name = $name.clone();
+            self
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! while_let_kill {
     ($kill: expr, $e: expr, $p: pat => $blk: block) => {
         loop {

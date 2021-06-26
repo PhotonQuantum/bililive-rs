@@ -14,9 +14,9 @@ use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use crate::errors::StreamError;
 use crate::packet::raw::RawPacket;
 use crate::packet::Packet;
-use crate::stream::channel::ConnEvent;
-use crate::stream::config::StreamConfig;
-use crate::stream::tasks::{conn_task, heart_beat_task, rx_task, tx_task};
+use self::channel::ConnEvent;
+pub use self::config::*;
+use self::tasks::{conn_task, heart_beat_task, rx_task, tx_task};
 
 use self::state::*;
 use self::waker::*;
@@ -61,7 +61,7 @@ pub struct BililiveStream {
 }
 
 impl BililiveStream {
-    pub fn new(config: &StreamConfig) -> Self {
+    pub fn new(config: StreamConfig) -> Self {
         let state = Arc::new(StreamStateStore::new());
         let waker = Arc::new(WakerProxy::new());
         let rx_buffer = Arc::new(ArrayQueue::new(32));
@@ -118,7 +118,7 @@ impl BililiveStream {
             state,
             rx_buffer,
             tx_sender: tx_buffer_sender,
-            config: config.clone(),
+            config: config,
             handles,
         }
     }

@@ -21,6 +21,12 @@ pub struct StreamConfig {
     pub retry: RetryConfig,
 }
 
+impl StreamConfig {
+    pub fn new(room_id: u64, uid: u64, token: &str, servers: &[String], retry: RetryConfig) -> Self {
+        StreamConfig { room_id, uid, token: token.to_string(), servers: servers.to_vec(), retry }
+    }
+}
+
 #[derive(Clone)]
 pub struct RetryConfig {
     // a connection lasts less than this period of time is considered a failure.

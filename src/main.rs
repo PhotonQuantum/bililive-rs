@@ -1,7 +1,8 @@
 use anyhow::Result;
 use serde_json::Value;
 
-use bililive_lib::{ClientBuilder, Packet};
+use bililive_lib::{ConfigBuilder, Packet, BililiveStream, StreamError};
+use futures::StreamExt;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -11,22 +12,36 @@ async fn main() -> Result<()> {
             println!("json body: {:#?}", json);
         }
     };
-    let mut client = ClientBuilder::new()
+    let config = ConfigBuilder::new()
         .by_uid(419220)
         .await?
-        .callback(Box::new(callback))
         .fetch_conf()
         .await?
-        .servers(&["wss://broadcastlv.chat.bilibili.com/sub".to_string()])
+        // .servers(&["wss://broadcastlv.chat.bilibili.com/sub".to_string()])
         .build()?;
-    println!("room_id: {}", client.room_id());
-    println!("uid: {}", client.uid());
-    println!("token: {}", client.token());
-    println!("servers: {:#?}", client.servers());
-    client.connect().await?;
-    println!("connected");
-    client.join().await?;
-    println!("joined");
+    println!("room_id: {}", config.room_id);
+    println!("uid: {}", config.uid);
+    println!("token: {}", config.token);
+    println!("servers: {:#?}", config.servers);
+
+    let mut stream = BililiveStream::new(config);
+    // client.connect().await?;
+    // println!("connected");
+    // client.join().await?;
+    // println!("joined");
+    while let Some(e) = stream.next().await {
+        match e{
+            Ok(packet) => {
+                println!("raw: {:?}", packet);
+                if let Ok(json) = packet.json::<Value>() {
+                    println!("json: {:?}", json);
+                }
+            }
+            Err(e) => {
+                println!("err: {:?}", e)
+            }
+        }
+    }
 
     Ok(())
 }
