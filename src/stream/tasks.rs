@@ -10,16 +10,16 @@ use tokio::time::Duration;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
 
-use super::state::{StreamState, StreamStateStore};
-use super::utils::room_enter_message;
-use super::waker::{WakeMode, WakerProxy};
-use super::{ConnRxType, ConnTxType, SinkRxType, SinkTxType, WsRxType, WsTxType};
 use crate::config::StreamConfig;
 use crate::raw::RawPacket;
 use crate::{IncompleteResult, Operation, Packet, Protocol};
 
+use super::state::{StreamState, StreamStateStore};
+use super::utils::room_enter_message;
+use super::waker::{WakeMode, WakerProxy};
 use super::ConnEvent;
 use super::Result;
+use super::{ConnRxType, ConnTxType, SinkRxType, SinkTxType, WsRxType, WsTxType};
 
 // tx_buffer: tx message buffer
 // conn_rx: connection event rx

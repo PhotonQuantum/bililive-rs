@@ -20,6 +20,13 @@ pub struct Packet {
 }
 
 impl Packet {
+    pub fn new<T: Into<Vec<u8>>>(op: Operation, proto: Protocol, data: T) -> Self {
+        Packet {
+            op,
+            proto,
+            data: data.into(),
+        }
+    }
     pub fn op(&self) -> Operation {
         self.op
     }
