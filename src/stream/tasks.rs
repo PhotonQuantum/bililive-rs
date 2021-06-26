@@ -136,11 +136,13 @@ pub(crate) async fn tx_task(
     loop {
         let (mut ws_tx, receipt) = ws_tx_receiver.recv().await.unwrap();
         receipt.send(()).unwrap();
+        let mut drop_conn_rx_once = false;
         loop {
             let fut = tx_buffer.recv();
             let conn_fut = conn_rx.recv();
             tokio::pin!(fut);
             tokio::pin!(conn_fut);
+            drop_conn_rx_once = false;
             match select(fut, conn_fut).await {
                 Either::Left((Some(msg), _)) => {
                     let send_result = ws_tx.send(msg).await;
@@ -149,7 +151,9 @@ pub(crate) async fn tx_task(
                         if conn_state.load().is_active() {
                             conn_state.store(StreamState::Establishing);
                             conn_tx.send(ConnEvent::Failure).unwrap();
+                            drop_conn_rx_once = true;   // drop the signal just sent
                         }
+                        break;
                     } else {
                         waker.wake(WakeMode::Tx);
                     }
@@ -163,9 +167,14 @@ pub(crate) async fn tx_task(
                     if conn_state.load().is_active() {
                         conn_state.store(StreamState::Establishing);
                         conn_tx.send(ConnEvent::Failure).unwrap();
+                        drop_conn_rx_once = true;   // drop the signal just sent
                     }
+                    break;
                 }
             }
+        }
+        if drop_conn_rx_once {
+            conn_rx.recv().await.unwrap();
         }
     }
 }
@@ -187,6 +196,7 @@ pub(crate) async fn rx_task(
     loop {
         let (mut ws_rx, receipt) = ws_rx_receiver.recv().await.unwrap();
         receipt.send(()).unwrap();
+        let mut drop_conn_rx_once = false;
         let mut buf = vec![];
         loop {
             let fut = ws_rx.next();
@@ -217,7 +227,9 @@ pub(crate) async fn rx_task(
                                 if conn_state.load().is_active() {
                                     conn_state.store(StreamState::Establishing);
                                     conn_tx.send(ConnEvent::Failure).unwrap();
+                                    drop_conn_rx_once = true;   // drop the signal just sent
                                 }
+                                break;
                             }
                         }
                     }
@@ -231,9 +243,14 @@ pub(crate) async fn rx_task(
                     if conn_state.load().is_active() {
                         conn_state.store(StreamState::Establishing);
                         conn_tx.send(ConnEvent::Failure).unwrap();
+                        drop_conn_rx_once = true;   // drop the signal just sent
                     }
+                    break;
                 }
             }
+        }
+        if drop_conn_rx_once {
+            conn_rx.recv().await.unwrap();
         }
     }
 }
