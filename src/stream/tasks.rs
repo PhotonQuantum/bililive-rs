@@ -2,8 +2,8 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use crossbeam::queue::ArrayQueue;
-use futures::{SinkExt, StreamExt};
 use futures::future::Either;
+use futures::{SinkExt, StreamExt};
 use futures_util::future::select;
 use log::{debug, info, warn};
 use tokio::sync::{mpsc, oneshot};
@@ -11,16 +11,16 @@ use tokio::time::Duration;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
 
-use crate::{IncompleteResult, Operation, Packet, Protocol};
 use crate::config::StreamConfig;
 use crate::raw::RawPacket;
+use crate::{IncompleteResult, Operation, Packet, Protocol};
 
-use super::{ConnRxType, ConnTxType, SinkRxType, SinkTxType, WsRxType, WsTxType};
-use super::ConnEvent;
-use super::Result;
 use super::state::{StreamState, StreamStateStore};
 use super::utils::room_enter_message;
 use super::waker::{WakeMode, WakerProxy};
+use super::ConnEvent;
+use super::Result;
+use super::{ConnRxType, ConnTxType, SinkRxType, SinkTxType, WsRxType, WsTxType};
 
 // tx_buffer: tx message buffer
 // conn_rx: connection event rx
@@ -174,8 +174,8 @@ pub async fn tx_task(
                     }
                     ConnEvent::Failure => {
                         debug!("tx received failure event");
-                        break
-                    },
+                        break;
+                    }
                 },
                 _ => {
                     warn!("error occurred when fetching tx queue");
@@ -260,12 +260,12 @@ pub async fn rx_task(
                 Either::Right((Ok(event), _)) => match event {
                     ConnEvent::Close => {
                         debug!("rx shutting down");
-                        return
-                    },
+                        return;
+                    }
                     ConnEvent::Failure => {
                         debug!("rx received failure event");
-                        break
-                    },
+                        break;
+                    }
                 },
                 _ => {
                     warn!("error occurred when receiving message");

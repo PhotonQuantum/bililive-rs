@@ -2,8 +2,8 @@ use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::sync::Arc;
 use std::time::Duration;
 
-use rand::{Rng, thread_rng};
 use rand::distributions::Uniform;
+use rand::{thread_rng, Rng};
 
 pub type RetryPolicy = Arc<dyn Fn(u32) -> Option<Duration> + Send + Sync>;
 

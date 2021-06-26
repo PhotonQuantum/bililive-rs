@@ -41,19 +41,3 @@ macro_rules! setter_clone {
         }
     };
 }
-
-#[macro_export]
-macro_rules! while_let_kill {
-    ($kill: expr, $e: expr, $p: pat => $blk: block) => {
-        loop {
-            let fut = $e;
-            let kill_fut = $kill;
-            tokio::pin!(fut);
-            tokio::pin!(kill_fut);
-            match futures_util::future::select(fut, kill_fut).await {
-                futures::future::Either::Left(($p, _)) => $blk,
-                _ => break,
-            }
-        }
-    };
-}
