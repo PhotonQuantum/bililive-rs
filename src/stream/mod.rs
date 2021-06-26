@@ -6,6 +6,7 @@ use crossbeam::queue::ArrayQueue;
 use futures::stream::{SplitSink, SplitStream};
 use futures::{sink::Sink, stream::Stream};
 use tokio::net::TcpStream;
+use tokio::runtime::Handle;
 use tokio::sync::{broadcast, mpsc};
 use tokio::task::JoinHandle;
 use tokio_tungstenite::tungstenite::Message;
@@ -25,6 +26,9 @@ mod state;
 mod tasks;
 mod utils;
 mod waker;
+
+#[cfg(test)]
+mod tests;
 
 type WsTxType = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
 type WsRxType = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
@@ -66,7 +70,7 @@ pub struct BililiveStream {
     // connection state
     rx_buffer: Arc<ArrayQueue<Result<Packet>>>,
     // buffer for incoming packets
-    tx_sender: mpsc::Sender<Message>,
+    tx_sender: Arc<mpsc::Sender<Message>>,
     // sender of tx channel (receiver is in TxTask)
     tx_buffer_cap: usize,
     conn_tx: broadcast::Sender<ConnEvent>,
@@ -132,7 +136,7 @@ impl BililiveStream {
             waker,
             state,
             rx_buffer,
-            tx_sender: tx_buffer_sender,
+            tx_sender: Arc::new(tx_buffer_sender),
             tx_buffer_cap,
             conn_tx,
             handles,
@@ -186,9 +190,13 @@ impl Sink<Packet> for BililiveStream {
     fn start_send(self: Pin<&mut Self>, item: Packet) -> StdResult<(), Self::Error> {
         let raw_packet = RawPacket::from(item);
         let frame = Message::binary(raw_packet);
-        self.tx_sender
-            .blocking_send(frame)
-            .map_err(|_| StreamError::AlreadyClosed)
+        let rt = Handle::current();
+        let tx_sender = self.tx_sender.clone();
+        rt.spawn(async {
+            let tx_sender = tx_sender;
+            drop(tx_sender.send(frame).await);
+        });
+        Ok(())
     }
 
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<StdResult<(), Self::Error>> {
