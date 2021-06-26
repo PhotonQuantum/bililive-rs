@@ -159,7 +159,10 @@ pub(crate) async fn tx_task(
                     }
                 }
                 Either::Right((Ok(event), _)) => match event {
-                    ConnEvent::Close => return,
+                    ConnEvent::Close => {
+                        let _ = ws_tx.send(Message::Close(None)).await;
+                        return
+                    },
                     ConnEvent::Failure => break,
                 },
                 _ => {

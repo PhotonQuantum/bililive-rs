@@ -46,6 +46,15 @@ pub struct Handles {
     heart_beat_task: JoinHandle<()>,
 }
 
+impl Handles {
+    pub async fn join(&mut self) {
+        (&mut self.tx_task).await.unwrap();
+        (&mut self.rx_task).await.unwrap();
+        (&mut self.conn_task).await.unwrap();
+        (&mut self.heart_beat_task).await.unwrap();
+    }
+}
+
 #[derive(Debug)]
 pub struct BililiveStream {
     waker: Arc<WakerProxy>,
@@ -57,6 +66,7 @@ pub struct BililiveStream {
     tx_sender: mpsc::Sender<Message>,
     // sender of tx channel (receiver is in TxTask)
     config: StreamConfig,
+    conn_tx: broadcast::Sender<ConnEvent>,
     handles: Handles,
 }
 
@@ -99,7 +109,7 @@ impl BililiveStream {
                 config.clone(),
                 ws_tx_sender,
                 ws_rx_sender,
-                (conn_tx, conn_rx),
+                (conn_tx.clone(), conn_rx),
                 state.clone(),
                 waker.clone(),
             )
@@ -119,8 +129,17 @@ impl BililiveStream {
             rx_buffer,
             tx_sender: tx_buffer_sender,
             config,
+            conn_tx,
             handles,
         }
+    }
+
+    pub fn close(&self) {
+        self.conn_tx.send(ConnEvent::Close).unwrap();
+    }
+
+    pub async fn join(&mut self) {
+        self.handles.join().await;
     }
 }
 
