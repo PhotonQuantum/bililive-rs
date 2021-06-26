@@ -103,7 +103,7 @@ impl ConfigBuilder {
                 .ok_or_else(|| BililiveError::Build(String::from("token")))?,
             servers: self.servers
                 .ok_or_else(|| BililiveError::Build(String::from("servers")))?,
-            retry: Default::default(),
+            retry: self.retry,
         }
         )
     }
