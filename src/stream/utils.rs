@@ -1,8 +1,8 @@
 use serde_json::json;
 use tokio_tungstenite::tungstenite::Message;
 
+use crate::config::StreamConfig;
 use crate::raw::RawPacket;
-use crate::stream::config::StreamConfig;
 use crate::{Operation, Protocol};
 
 pub(crate) fn room_enter_message(config: &StreamConfig) -> Message {

@@ -10,8 +10,8 @@ use tokio::time::Duration;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
 
+use crate::config::StreamConfig;
 use crate::raw::RawPacket;
-use crate::stream::config::StreamConfig;
 use crate::stream::state::{StreamState, StreamStateStore};
 use crate::stream::utils::room_enter_message;
 use crate::stream::waker::{WakeMode, WakerProxy};
