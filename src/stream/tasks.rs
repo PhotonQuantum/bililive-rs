@@ -84,8 +84,9 @@ pub(crate) async fn conn_task(
             if let Some(delay) = maybe_delay {
                 tokio::time::sleep(delay).await
             } else {
-                // disconnect
-                todo!()
+                // giving up
+                conn_tx.send(ConnEvent::Close).unwrap();
+                break;
             }
         }
 
