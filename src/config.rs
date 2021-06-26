@@ -111,9 +111,9 @@ pub fn exponential_backoff_policy(unit: Duration, truncate: u32, fail: u32) -> R
             None
         } else {
             let max_delay = 2_u32.pow(if count >= truncate { truncate } else { count });
-            let between = Uniform::new_inclusive(0, max_delay);
+            let between = Uniform::new_inclusive(0, max_delay * 100);
             let units = thread_rng().sample(between);
-            Some(unit * units)
+            Some(unit * units / 100)
         }
     })
 }
