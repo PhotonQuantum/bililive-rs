@@ -2,9 +2,9 @@ use std::convert::TryFrom;
 
 use nom::bytes::streaming::take;
 use nom::combinator::{map, map_res};
+use nom::IResult;
 use nom::number::streaming::{be_u16, be_u32};
 use nom::sequence::tuple;
-use nom::IResult;
 
 use super::raw::RawPacket;
 use super::types::{Operation, Protocol};

@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use futures::StreamExt;
+use log::info;
 use serde_json::Value;
 
 use bililive_lib::{BililiveStream, ConfigBuilder};
@@ -10,13 +11,13 @@ async fn test_func(stream: &mut BililiveStream) {
     while let Some(e) = stream.next().await {
         match e {
             Ok(packet) => {
-                println!("raw: {:?}", packet);
+                info!("raw: {:?}", packet);
                 if let Ok(json) = packet.json::<Value>() {
-                    println!("json: {:?}", json);
+                    info!("json: {:?}", json);
                 }
             }
             Err(e) => {
-                println!("err: {:?}", e);
+                info!("err: {:?}", e);
             }
         }
     }
@@ -24,6 +25,7 @@ async fn test_func(stream: &mut BililiveStream) {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    pretty_env_logger::init();
     let config = ConfigBuilder::new()
         .by_uid(419220)
         .await?
@@ -31,21 +33,17 @@ async fn main() -> Result<()> {
         .await?
         // .servers(&["wss://broadcastlv.chat.bilibili.com/sub".to_string()])
         .build()?;
-    println!("room_id: {}", config.room_id);
-    println!("uid: {}", config.uid);
-    println!("token: {}", config.token);
-    println!("servers: {:#?}", config.servers);
+    info!("room_id: {}", config.room_id);
+    info!("uid: {}", config.uid);
+    info!("token: {}", config.token);
+    info!("servers: {:#?}", config.servers);
 
     let mut stream = BililiveStream::new(config);
     let _ = tokio::time::timeout(Duration::from_secs(10), test_func(&mut stream)).await;
-    println!("disconnecting");
+    info!("disconnecting");
     stream.close();
-    println!("joining");
+    info!("joining");
     stream.join().await;
-    // client.connect().await?;
-    // println!("connected");
-    // client.join().await?;
-    // println!("joined");
 
     Ok(())
 }

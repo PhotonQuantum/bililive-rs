@@ -2,24 +2,25 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use crossbeam::queue::ArrayQueue;
-use futures::future::Either;
 use futures::{SinkExt, StreamExt};
+use futures::future::Either;
 use futures_util::future::select;
+use log::{debug, info, warn};
 use tokio::sync::{mpsc, oneshot};
 use tokio::time::Duration;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
 
+use crate::{IncompleteResult, Operation, Packet, Protocol};
 use crate::config::StreamConfig;
 use crate::raw::RawPacket;
-use crate::{IncompleteResult, Operation, Packet, Protocol};
 
+use super::{ConnRxType, ConnTxType, SinkRxType, SinkTxType, WsRxType, WsTxType};
+use super::ConnEvent;
+use super::Result;
 use super::state::{StreamState, StreamStateStore};
 use super::utils::room_enter_message;
 use super::waker::{WakeMode, WakerProxy};
-use super::ConnEvent;
-use super::Result;
-use super::{ConnRxType, ConnTxType, SinkRxType, SinkTxType, WsRxType, WsTxType};
 
 // tx_buffer: tx message buffer
 // conn_rx: connection event rx
@@ -39,6 +40,7 @@ pub async fn heart_beat_task(
         match select(fut, conn_fut).await {
             Either::Left(_) => {
                 if conn_state.load().is_active() {
+                    debug!("sending heart beat package");
                     tx_buffer.send(msg.clone()).await.unwrap();
                 }
             }
@@ -70,7 +72,6 @@ pub async fn conn_task(
 
     let mut fail_count: u32 = 0;
     loop {
-        println!("connect");
         let mut server_with_last_connect = servers_with_last_connect.next();
         let (server, last_connect) = server_with_last_connect.as_mut().unwrap();
         if let Some(last_connect) = last_connect {
@@ -82,10 +83,10 @@ pub async fn conn_task(
             }
             let maybe_delay = (*config.retry.retry_policy)(fail_count);
             if let Some(delay) = maybe_delay {
-                println!("delay");
+                info!("error occurred, backing off for {:?}", delay);
                 tokio::time::sleep(delay).await;
             } else {
-                // giving up
+                warn!("retry failed, closing connection");
                 conn_tx.send(ConnEvent::Close).unwrap();
                 break;
             }
@@ -93,11 +94,14 @@ pub async fn conn_task(
 
         *last_connect = Some(Instant::now());
 
+        debug!("connecting server");
         let (ws, _) = connect_async(*server).await.unwrap();
         let (mut tx, rx) = ws.split();
 
         // send room enter message before putting it to tx task
+        debug!("sending room enter message");
         if tx.send(room_enter_message(&config)).await.is_err() {
+            warn!("failed to send room enter message");
             continue;
         }
 
@@ -112,6 +116,8 @@ pub async fn conn_task(
         conn_state.store(StreamState::Active);
         // ready to send message
         waker.wake(WakeMode::Tx);
+
+        debug!("connection ready");
 
         match conn_rx.recv().await {
             Ok(ConnEvent::Failure) => continue,
@@ -137,6 +143,7 @@ pub async fn tx_task(
     loop {
         let (mut ws_tx, receipt) = ws_tx_receiver.recv().await.unwrap();
         receipt.send(()).unwrap();
+        debug!("tx ready");
         let mut drop_conn_rx_once;
         loop {
             let fut = tx_buffer.recv();
@@ -148,6 +155,7 @@ pub async fn tx_task(
                 Either::Left((Some(msg), _)) => {
                     let send_result = ws_tx.send(msg).await;
                     if send_result.is_err() {
+                        warn!("error occurred when sending message");
                         // connection failed
                         if conn_state.load().is_active() {
                             conn_state.store(StreamState::Establishing);
@@ -160,12 +168,17 @@ pub async fn tx_task(
                 }
                 Either::Right((Ok(event), _)) => match event {
                     ConnEvent::Close => {
+                        debug!("tx shutting down");
                         drop(ws_tx.send(Message::Close(None)).await);
                         return;
                     }
-                    ConnEvent::Failure => break,
+                    ConnEvent::Failure => {
+                        debug!("tx received failure event");
+                        break
+                    },
                 },
                 _ => {
+                    warn!("error occurred when fetching tx queue");
                     // connection failed
                     if conn_state.load().is_active() {
                         conn_state.store(StreamState::Establishing);
@@ -199,6 +212,7 @@ pub async fn rx_task(
     loop {
         let (mut ws_rx, receipt) = ws_rx_receiver.recv().await.unwrap();
         receipt.send(()).unwrap();
+        debug!("rx ready");
         let mut drop_conn_rx_once;
         let mut buf = vec![];
         loop {
@@ -213,22 +227,23 @@ pub async fn rx_task(
                         buf.extend(msg.into_data());
                         match RawPacket::parse(&buf) {
                             IncompleteResult::Ok((remaining, raw)) => {
-                                println!("packet parsed, {} bytes remaining", remaining.len());
+                                debug!("packet parsed, {} bytes remaining", remaining.len());
 
                                 let consume_len = buf.len() - remaining.len();
                                 drop(buf.drain(..consume_len));
 
                                 let pack = Packet::from(raw);
                                 if rx_buffer.push(Ok(pack)).is_err() {
-                                    println!("warn: buffer full, dropping message");
+                                    warn!("warn: buffer full, dropping message");
                                 }
 
                                 waker.wake(WakeMode::Rx);
                             }
                             IncompleteResult::Incomplete(needed) => {
-                                println!("incomplete packet, {:?} needed", needed);
+                                debug!("incomplete packet, {:?} needed", needed);
                             }
                             IncompleteResult::Err(_) => {
+                                debug!("error occurred when parsing incoming packet");
                                 // connection failed
                                 if conn_state.load().is_active() {
                                     conn_state.store(StreamState::Establishing);
@@ -238,13 +253,22 @@ pub async fn rx_task(
                                 break;
                             }
                         }
+                    } else {
+                        debug!("not a binary message, dropping");
                     }
                 }
                 Either::Right((Ok(event), _)) => match event {
-                    ConnEvent::Close => return,
-                    ConnEvent::Failure => break,
+                    ConnEvent::Close => {
+                        debug!("rx shutting down");
+                        return
+                    },
+                    ConnEvent::Failure => {
+                        debug!("rx received failure event");
+                        break
+                    },
                 },
                 _ => {
+                    warn!("error occurred when receiving message");
                     // connection failed
                     if conn_state.load().is_active() {
                         conn_state.store(StreamState::Establishing);

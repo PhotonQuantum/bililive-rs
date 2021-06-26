@@ -3,25 +3,24 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use crossbeam::queue::ArrayQueue;
-use futures::stream::{SplitSink, SplitStream};
 use futures::{sink::Sink, stream::Stream};
+use futures::stream::{SplitSink, SplitStream};
 use tokio::net::TcpStream;
 use tokio::runtime::Handle;
 use tokio::sync::{broadcast, mpsc};
 use tokio::task::JoinHandle;
-use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
+use tokio_tungstenite::tungstenite::Message;
 
 pub use crate::config::*;
 use crate::errors::StreamError;
-use crate::packet::raw::RawPacket;
 use crate::packet::Packet;
+use crate::packet::raw::RawPacket;
 
 use self::state::*;
 use self::tasks::{conn_task, heart_beat_task, rx_task, tx_task};
 use self::waker::*;
 
-mod channel;
 mod state;
 mod tasks;
 mod utils;
