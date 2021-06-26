@@ -1,4 +1,4 @@
-use crate::ClientBuilder;
+use crate::ConfigBuilder;
 
 use super::types::{ConfQueryInner, Resp, RoomQueryInner};
 
@@ -32,7 +32,7 @@ fn must_parse_conf() {
 #[tokio::test]
 async fn must_build_client() {
     let callback = |_pack| {};
-    ClientBuilder::new()
+    ConfigBuilder::new()
         .room_id(1016)
         .uid(0)
         .servers(&["wss://".to_string()])
@@ -45,7 +45,7 @@ async fn must_build_client() {
 #[tokio::test]
 async fn must_build_client_real() {
     let callback = |_pack| {};
-    ClientBuilder::new()
+    ConfigBuilder::new()
         .by_uid(419220)
         .await
         .unwrap()

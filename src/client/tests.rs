@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use tokio::time::Duration;
 
-use crate::{Client, ClientBuilder, Packet};
+use crate::{Client, ConfigBuilder, Packet};
 
 struct TestClient {
     client: Client,
@@ -13,7 +13,7 @@ impl TestClient {
     async fn new(uid: u64) -> Self {
         let received = Arc::new(Mutex::new(vec![]));
         let received_clone = received.clone();
-        let client = ClientBuilder::new()
+        let client = ConfigBuilder::new()
             .by_uid(uid)
             .await
             .unwrap()

@@ -1,31 +1,31 @@
 use std::sync::Arc;
 
+use crate::{BililiveStream, Client, Packet, StreamConfig, RetryConfig};
 use crate::builder::types::{ConfQueryInner, Resp, RoomQueryInner};
 use crate::errors::{BililiveError, ParseError, Result};
-use crate::{Client, Packet};
 
 #[cfg(test)]
 mod tests;
 mod types;
 
-pub struct ClientBuilder {
+pub struct ConfigBuilder {
     http: reqwest::Client,
     room_id: Option<u64>,
     uid: Option<u64>,
     token: Option<String>,
     servers: Option<Vec<String>>,
     tx_buffer: usize,
-    callback: Option<Box<dyn Fn(Packet) + Send + Sync>>,
+    retry: RetryConfig
 }
 
-impl Default for ClientBuilder {
+impl Default for ConfigBuilder {
     #[must_use]
     fn default() -> Self {
         Self::new_with_http(Default::default())
     }
 }
 
-impl ClientBuilder {
+impl ConfigBuilder {
     #[must_use]
     pub fn new() -> Self {
         Default::default()
@@ -40,14 +40,14 @@ impl ClientBuilder {
             token: None,
             servers: None,
             tx_buffer: 32,
-            callback: None,
+            retry: Default::default()
         }
     }
 
     setter_copy!(tx_buffer, usize);
     setter_option_copy!(room_id, u64);
     setter_option_copy!(uid, u64);
-    setter_option_copy!(callback, Box<dyn Fn(Packet) + Send + Sync>);
+    setter_clone!(retry, RetryConfig);
 
     pub fn token(mut self, token: &str) -> Self {
         self.token = Some(token.to_string());
@@ -93,20 +93,18 @@ impl ClientBuilder {
         Ok(self)
     }
 
-    pub fn build(self) -> Result<Client> {
-        Ok(Client::new(
-            self.room_id
+    pub fn build(self) -> Result<StreamConfig> {
+        Ok(StreamConfig {
+            room_id: self.room_id
                 .ok_or_else(|| BililiveError::Build(String::from("room_id")))?,
-            self.uid
+            uid: self.uid
                 .ok_or_else(|| BililiveError::Build(String::from("uid")))?,
-            self.token
+            token: self.token
                 .ok_or_else(|| BililiveError::Build(String::from("token")))?,
-            self.servers
+            servers: self.servers
                 .ok_or_else(|| BililiveError::Build(String::from("servers")))?,
-            self.tx_buffer,
-            self.callback
-                .map(Arc::from)
-                .ok_or_else(|| BililiveError::Build(String::from("callback")))?,
-        ))
+            retry: Default::default(),
+        }
+        )
     }
 }
