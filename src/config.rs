@@ -20,25 +20,26 @@ pub struct StreamConfig {
     // retry config
     pub retry: RetryConfig,
     // buffer config
-    pub buffer: BufferConfig
+    pub buffer: BufferConfig,
 }
 
 impl StreamConfig {
+    #[must_use]
     pub fn new(
         room_id: u64,
         uid: u64,
         token: &str,
         servers: &[String],
         retry: RetryConfig,
-        buffer: BufferConfig
+        buffer: BufferConfig,
     ) -> Self {
-        StreamConfig {
+        Self {
             room_id,
             uid,
             token: token.to_string(),
             servers: servers.to_vec(),
             retry,
-            buffer
+            buffer,
         }
     }
 }
@@ -52,7 +53,7 @@ pub struct BufferConfig {
     // Buffer length for conn events.
     pub conn_event_buffer: usize,
     // Length of buffer used when sending socket from conn task to worker tasks.
-    pub socket_buffer: usize
+    pub socket_buffer: usize,
 }
 
 impl Default for BufferConfig {
@@ -61,7 +62,7 @@ impl Default for BufferConfig {
             tx_buffer: 32,
             rx_buffer: 128,
             conn_event_buffer: 8,
-            socket_buffer: 8
+            socket_buffer: 8,
         }
     }
 }
@@ -99,14 +100,17 @@ impl Default for RetryConfig {
 // unit: unit duration of delay
 // truncate: after a continuous failure of such counts, the delay stops increasing.
 // fail: after a continuous failure of such counts, the connection closes.
+//
+// # Panics
 // Truncate is expected to less than fail. Otherwise, a panic will occur.
+#[must_use]
 pub fn exponential_backoff_policy(unit: Duration, truncate: u32, fail: u32) -> RetryPolicy {
     assert!(truncate < fail, "truncate >= fail");
     Arc::new(move |count| {
         if count >= fail {
             None
         } else {
-            let max_delay = 2u32.pow(if count >= truncate { truncate } else { count });
+            let max_delay = 2_u32.pow(if count >= truncate { truncate } else { count });
             let between = Uniform::new_inclusive(0, max_delay);
             let units = thread_rng().sample(between);
             Some(unit * units)

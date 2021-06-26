@@ -10,15 +10,13 @@ use tokio::time::Duration;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
 
+use super::state::{StreamState, StreamStateStore};
+use super::utils::room_enter_message;
+use super::waker::{WakeMode, WakerProxy};
+use super::{ConnRxType, ConnTxType, SinkRxType, SinkTxType, WsRxType, WsTxType};
 use crate::config::StreamConfig;
 use crate::raw::RawPacket;
-use crate::stream::state::{StreamState, StreamStateStore};
-use crate::stream::utils::room_enter_message;
-use crate::stream::waker::{WakeMode, WakerProxy};
-use crate::{
-    ConnRxType, ConnTxType, IncompleteResult, Operation, Packet, Protocol, SinkRxType, SinkTxType,
-    WsRxType, WsTxType,
-};
+use crate::{IncompleteResult, Operation, Packet, Protocol};
 
 use super::ConnEvent;
 use super::Result;
@@ -26,7 +24,7 @@ use super::Result;
 // tx_buffer: tx message buffer
 // conn_rx: connection event rx
 // conn_state: stream connection state
-pub(crate) async fn heart_beat_task(
+pub async fn heart_beat_task(
     tx_buffer: SinkTxType,
     mut conn_rx: ConnRxType,
     conn_state: Arc<StreamStateStore>,
@@ -59,7 +57,7 @@ pub(crate) async fn heart_beat_task(
 // conn_(tx, rx): connection event channel
 // conn_state: stream connection state
 // waker: waker proxy
-pub(crate) async fn conn_task(
+pub async fn conn_task(
     config: StreamConfig,
     ws_tx_sender: mpsc::Sender<(WsTxType, oneshot::Sender<()>)>,
     ws_rx_sender: mpsc::Sender<(WsRxType, oneshot::Sender<()>)>,
@@ -82,7 +80,7 @@ pub(crate) async fn conn_task(
             }
             let maybe_delay = (*config.retry.retry_policy)(fail_count);
             if let Some(delay) = maybe_delay {
-                tokio::time::sleep(delay).await
+                tokio::time::sleep(delay).await;
             } else {
                 // giving up
                 conn_tx.send(ConnEvent::Close).unwrap();
@@ -125,7 +123,7 @@ pub(crate) async fn conn_task(
 // tx_buffer: tx message buffer
 // conn_state: stream connection state
 // waker: waker proxy
-pub(crate) async fn tx_task(
+pub async fn tx_task(
     mut ws_tx_receiver: mpsc::Receiver<(WsTxType, oneshot::Sender<()>)>,
     mut tx_buffer: SinkRxType,
     conn: (ConnTxType, ConnRxType),
@@ -155,13 +153,12 @@ pub(crate) async fn tx_task(
                             drop_conn_rx_once = true; // drop the signal just sent
                         }
                         break;
-                    } else {
-                        waker.wake(WakeMode::Tx);
                     }
+                    waker.wake(WakeMode::Tx);
                 }
                 Either::Right((Ok(event), _)) => match event {
                     ConnEvent::Close => {
-                        let _ = ws_tx.send(Message::Close(None)).await;
+                        drop(ws_tx.send(Message::Close(None)).await);
                         return;
                     }
                     ConnEvent::Failure => break,
@@ -188,7 +185,7 @@ pub(crate) async fn tx_task(
 // tx_buffer: rx packet buffer
 // conn_state: stream connection state
 // waker: waker proxy
-pub(crate) async fn rx_task(
+pub async fn rx_task(
     mut ws_rx_receiver: mpsc::Receiver<(WsRxType, oneshot::Sender<()>)>,
     rx_buffer: Arc<ArrayQueue<Result<Packet>>>,
     conn: (ConnTxType, ConnRxType),

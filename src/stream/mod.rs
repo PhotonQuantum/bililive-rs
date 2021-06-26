@@ -26,17 +26,17 @@ mod tasks;
 mod utils;
 mod waker;
 
-pub(crate) type WsTxType = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
-pub(crate) type WsRxType = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
-pub(crate) type ConnTxType = broadcast::Sender<ConnEvent>;
-pub(crate) type ConnRxType = broadcast::Receiver<ConnEvent>;
-pub(crate) type SinkTxType = mpsc::Sender<Message>;
-pub(crate) type SinkRxType = mpsc::Receiver<Message>;
-pub(crate) type Result<T> = std::result::Result<T, StreamError>;
+type WsTxType = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
+type WsRxType = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
+type ConnTxType = broadcast::Sender<ConnEvent>;
+type ConnRxType = broadcast::Receiver<ConnEvent>;
+type SinkTxType = mpsc::Sender<Message>;
+type SinkRxType = mpsc::Receiver<Message>;
+type Result<T> = std::result::Result<T, StreamError>;
 type StdResult<T, E> = std::result::Result<T, E>;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub(crate) enum ConnEvent {
+pub enum ConnEvent {
     Close,
     Failure,
 }
@@ -153,14 +153,13 @@ impl Stream for BililiveStream {
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         match self.state.load() {
-            StreamState::Active => {
-                if let Some(item) = self.rx_buffer.pop() {
-                    Poll::Ready(Some(item))
-                } else {
+            StreamState::Active => self.rx_buffer.pop().map_or_else(
+                || {
                     self.waker.register(WakeMode::Rx, cx.waker());
                     Poll::Pending
-                }
-            }
+                },
+                |item| Poll::Ready(Some(item)),
+            ),
             StreamState::Establishing => {
                 self.waker.register(WakeMode::Rx, cx.waker());
                 Poll::Pending
@@ -198,14 +197,9 @@ impl Sink<Packet> for BililiveStream {
             Poll::Ready(Ok(()))
         } else {
             match self.state.load() {
-                StreamState::Active => {
+                StreamState::Active | StreamState::Establishing => {
                     // Buffer is not empty, and connection is up.
                     // The TxTask is processing the packets.
-                    self.waker.register(WakeMode::Tx, cx.waker());
-                    Poll::Pending
-                }
-                StreamState::Establishing => {
-                    // Connection is being established.
                     self.waker.register(WakeMode::Tx, cx.waker());
                     Poll::Pending
                 }

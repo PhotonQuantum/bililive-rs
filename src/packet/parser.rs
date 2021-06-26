@@ -17,10 +17,10 @@ fn parse_op(input: &[u8]) -> IResult<&[u8], Operation> {
     map(be_u32, Operation::from)(input)
 }
 
-pub(crate) fn parse(input: &[u8]) -> IResult<&[u8], RawPacket> {
+pub fn parse(input: &[u8]) -> IResult<&[u8], RawPacket> {
     let (input, (packet_length, header_length, protocol_version, op, seq_id)) =
         tuple((be_u32, be_u16, parse_proto, parse_op, be_u32))(input)?;
-    let (input, data) = take(packet_length - header_length as u32)(input)?;
+    let (input, data) = take(packet_length - u32::from(header_length))(input)?;
     Ok((
         input,
         RawPacket {

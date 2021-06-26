@@ -5,7 +5,7 @@ use crate::config::StreamConfig;
 use crate::raw::RawPacket;
 use crate::{Operation, Protocol};
 
-pub(crate) fn room_enter_message(config: &StreamConfig) -> Message {
+pub fn room_enter_message(config: &StreamConfig) -> Message {
     Message::binary(RawPacket::new(
         Operation::RoomEnter,
         Protocol::Json,
