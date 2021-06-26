@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::Instant;
 
 use crossbeam::queue::ArrayQueue;
 use futures::future::Either;
@@ -10,18 +11,17 @@ use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
 
 use crate::raw::RawPacket;
+use crate::stream::config::StreamConfig;
 use crate::stream::state::{StreamState, StreamStateStore};
+use crate::stream::utils::room_enter_message;
 use crate::stream::waker::{WakeMode, WakerProxy};
 use crate::{
     ConnRxType, ConnTxType, IncompleteResult, Operation, Packet, Protocol, SinkRxType, SinkTxType,
     WsRxType, WsTxType,
 };
 
-use super::channel::ConnEvent;
+use super::ConnEvent;
 use super::Result;
-use crate::stream::config::StreamConfig;
-use crate::stream::utils::room_enter_message;
-use std::time::Instant;
 
 // tx_buffer: tx message buffer
 // conn_rx: connection event rx
@@ -152,7 +152,7 @@ pub(crate) async fn tx_task(
                         if conn_state.load().is_active() {
                             conn_state.store(StreamState::Establishing);
                             conn_tx.send(ConnEvent::Failure).unwrap();
-                            drop_conn_rx_once = true;   // drop the signal just sent
+                            drop_conn_rx_once = true; // drop the signal just sent
                         }
                         break;
                     } else {
@@ -162,8 +162,8 @@ pub(crate) async fn tx_task(
                 Either::Right((Ok(event), _)) => match event {
                     ConnEvent::Close => {
                         let _ = ws_tx.send(Message::Close(None)).await;
-                        return
-                    },
+                        return;
+                    }
                     ConnEvent::Failure => break,
                 },
                 _ => {
@@ -171,7 +171,7 @@ pub(crate) async fn tx_task(
                     if conn_state.load().is_active() {
                         conn_state.store(StreamState::Establishing);
                         conn_tx.send(ConnEvent::Failure).unwrap();
-                        drop_conn_rx_once = true;   // drop the signal just sent
+                        drop_conn_rx_once = true; // drop the signal just sent
                     }
                     break;
                 }
@@ -232,7 +232,7 @@ pub(crate) async fn rx_task(
                                 if conn_state.load().is_active() {
                                     conn_state.store(StreamState::Establishing);
                                     conn_tx.send(ConnEvent::Failure).unwrap();
-                                    drop_conn_rx_once = true;   // drop the signal just sent
+                                    drop_conn_rx_once = true; // drop the signal just sent
                                 }
                                 break;
                             }
@@ -248,7 +248,7 @@ pub(crate) async fn rx_task(
                     if conn_state.load().is_active() {
                         conn_state.store(StreamState::Establishing);
                         conn_tx.send(ConnEvent::Failure).unwrap();
-                        drop_conn_rx_once = true;   // drop the signal just sent
+                        drop_conn_rx_once = true; // drop the signal just sent
                     }
                     break;
                 }

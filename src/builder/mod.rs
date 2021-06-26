@@ -1,8 +1,6 @@
-use std::sync::Arc;
-
-use crate::{BililiveStream, Client, Packet, StreamConfig, RetryConfig};
 use crate::builder::types::{ConfQueryInner, Resp, RoomQueryInner};
 use crate::errors::{BililiveError, ParseError, Result};
+use crate::{RetryConfig, StreamConfig};
 
 #[cfg(test)]
 mod tests;
@@ -15,7 +13,7 @@ pub struct ConfigBuilder {
     token: Option<String>,
     servers: Option<Vec<String>>,
     tx_buffer: usize,
-    retry: RetryConfig
+    retry: RetryConfig,
 }
 
 impl Default for ConfigBuilder {
@@ -40,7 +38,7 @@ impl ConfigBuilder {
             token: None,
             servers: None,
             tx_buffer: 32,
-            retry: Default::default()
+            retry: Default::default(),
         }
     }
 
@@ -95,16 +93,19 @@ impl ConfigBuilder {
 
     pub fn build(self) -> Result<StreamConfig> {
         Ok(StreamConfig {
-            room_id: self.room_id
+            room_id: self
+                .room_id
                 .ok_or_else(|| BililiveError::Build(String::from("room_id")))?,
-            uid: self.uid
+            uid: self
+                .uid
                 .ok_or_else(|| BililiveError::Build(String::from("uid")))?,
-            token: self.token
+            token: self
+                .token
                 .ok_or_else(|| BililiveError::Build(String::from("token")))?,
-            servers: self.servers
+            servers: self
+                .servers
                 .ok_or_else(|| BililiveError::Build(String::from("servers")))?,
             retry: self.retry,
-        }
-        )
+        })
     }
 }
