@@ -29,6 +29,8 @@ pub enum ParseError {
 pub enum StreamError {
     #[error("stream is closed")]
     AlreadyClosed,
+    #[error("websocket error: {0}")]
+    WebSocket(#[from] tokio_tungstenite::tungstenite::Error),
 }
 
 #[derive(Debug, Error)]

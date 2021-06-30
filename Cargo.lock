@@ -63,6 +63,7 @@ dependencies = [
  "futures-util",
  "log",
  "nom",
+ "once_cell",
  "pretty_env_logger",
  "rand",
  "reqwest",
