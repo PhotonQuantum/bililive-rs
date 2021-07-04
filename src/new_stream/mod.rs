@@ -1,9 +1,12 @@
+mod retry;
+mod waker;
+
 use std::pin::Pin;
 use std::sync::Arc;
-use std::task::{Context, Poll, Wake, Waker};
+use std::task::{Context, Poll, Waker};
 use std::time::{Duration, Instant};
 
-use futures::task::AtomicWaker;
+use self::waker::*;
 use futures::{ready, Sink, Stream};
 use log::{debug, warn};
 use once_cell::sync::Lazy;
@@ -18,38 +21,6 @@ type StreamResult<T> = std::result::Result<T, StreamError>;
 
 static HB_MSG: Lazy<Packet> =
     Lazy::new(|| Packet::new(Operation::HeartBeat, Protocol::Json, vec![]));
-
-// When reading the stream, a poll_ready is executed to ensure that all pending write op including
-// heartbeat is completed.
-// Therefore, we need to wake the task on which stream is polled in poll_ready (and poll_flush).
-// WakerProxy is a waker dispatcher. It will dispatch a wake op to both wakers (rx & tx), such that
-// both stream task and sink task can be waken and no starvation will occur.
-#[derive(Debug, Default)]
-struct WakerProxy {
-    tx_waker: AtomicWaker,
-    rx_waker: AtomicWaker,
-}
-
-impl WakerProxy {
-    pub fn rx(&self, waker: &Waker) {
-        self.rx_waker.register(waker);
-    }
-    pub fn tx(&self, waker: &Waker) {
-        self.tx_waker.register(waker);
-    }
-}
-
-impl Wake for WakerProxy {
-    fn wake(self: Arc<Self>) {
-        self.rx_waker.wake();
-        self.tx_waker.wake();
-    }
-
-    fn wake_by_ref(self: &Arc<Self>) {
-        self.rx_waker.wake();
-        self.tx_waker.wake();
-    }
-}
 
 pub struct BililiveStreamNew<T> {
     // underlying websocket stream
