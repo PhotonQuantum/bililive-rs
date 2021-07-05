@@ -6,7 +6,7 @@ use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
 
 use bililive_lib::packet::raw::RawPacket;
-use bililive_lib::{BililiveStreamNew, ConfigBuilder, Operation, Packet, Protocol, StreamError};
+use bililive_lib::{BililiveStreamNew, ConfigBuilder, Operation, Packet, Protocol, StreamError, connect_with_retry};
 
 async fn test_func(stream: &mut (impl Stream<Item = Result<Packet, StreamError>> + Unpin)) {
     while let Some(e) = stream.next().await {
@@ -39,22 +39,8 @@ async fn main() -> Result<()> {
     info!("token: {}", config.token);
     info!("servers: {:#?}", config.servers);
 
-    let (mut ws, _) = connect_async("wss://broadcastlv.chat.bilibili.com/sub").await?;
-    let room_enter = Message::binary(RawPacket::new(
-        Operation::RoomEnter,
-        Protocol::Json,
-        serde_json::to_vec(&json!({
-            "uid": config.uid,
-            "roomid": config.room_id,
-            "protover": 2,
-            "platform": "web",
-            "clientver": "1.8.2",
-            "type": 2,
-            "key": config.token
-        }))?,
-    ));
-    ws.send(room_enter).await?;
-    let mut stream = BililiveStreamNew::new(ws);
+    // let mut stream = BililiveStreamNew::new(ws);
+    let mut stream = connect_with_retry(&config).await.unwrap();
 
     test_func(&mut stream).await;
     // let mut stream = BililiveStream::new(config);
