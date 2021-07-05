@@ -1,5 +1,6 @@
-mod retry;
+pub mod retry;
 mod waker;
+mod utils;
 
 use std::pin::Pin;
 use std::sync::Arc;
@@ -122,9 +123,9 @@ where
                             debug!("not a binary message, dropping");
                         }
                     }
-                    Err(_) => {
+                    Err(e) => {
                         // underlying websocket error, closing connection
-                        warn!("error occurred when receiving message");
+                        warn!("error occurred when receiving message: {:?}", e);
                         return Poll::Ready(None);
                     }
                 }

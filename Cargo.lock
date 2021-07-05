@@ -1178,7 +1178,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "stream-reconnect"
 version = "0.3.1"
-source = "git+https://github.com/PhotonQuantum/stream-reconnect#844484d26c7a4e1902f4de67c7418dc2f1e5c8fd"
+source = "git+https://github.com/PhotonQuantum/stream-reconnect#3019d098473d49cfbd4824c11f3b3ff59e788fda"
 dependencies = [
  "futures",
  "log",
