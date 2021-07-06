@@ -8,7 +8,7 @@ use tokio::net::TcpStream;
 use crate::errors::Result;
 use stream_reconnect::{UnderlyingStream, ReconnectStream};
 use crate::stream::retry::RetryContext;
-use crate::config::StreamConfig;
+pub use crate::config::*;
 
 #[macro_use]
 mod utils;
@@ -28,7 +28,7 @@ pub async fn connect(config: StreamConfig) -> Result<DefaultStream> {
     Ok(BililiveStream::new(inner))
 }
 
-pub async fn connect_with_retry(config: StreamConfig) -> Result<RetryStream> {
-    let inner: InnerRetryStream = ReconnectStream::connect(config.into()).await?;
+pub async fn connect_with_retry(stream_config: StreamConfig, retry_config: RetryConfig) -> Result<RetryStream> {
+    let inner: InnerRetryStream = ReconnectStream::connect_with_options(stream_config.into(), retry_config.into()).await?;
     Ok(BililiveStream::new(inner))
 }

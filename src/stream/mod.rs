@@ -59,11 +59,7 @@ where
 
         // check whether we need to send heartbeat now.
         let now = Instant::now();
-        let need_hb = if let Some(last_hb) = self.last_hb {
-            now - last_hb >= Duration::from_secs(30)
-        } else {
-            true
-        };
+        let need_hb = self.last_hb.map_or(true, |last_hb| now - last_hb >= Duration::from_secs(30));
 
         if need_hb {
             // we need to send heartbeat, so push it into the sink
