@@ -1,6 +1,6 @@
 use crate::builder::types::{ConfQueryInner, Resp, RoomQueryInner};
-use crate::errors::{BililiveError, ParseError, Result};
 use crate::config::StreamConfig;
+use crate::errors::{BililiveError, ParseError, Result};
 
 #[cfg(test)]
 mod tests;

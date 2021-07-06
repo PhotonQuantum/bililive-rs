@@ -19,12 +19,7 @@ pub struct StreamConfig {
 
 impl StreamConfig {
     #[must_use]
-    pub fn new(
-        room_id: u64,
-        uid: u64,
-        token: &str,
-        servers: &[String],
-    ) -> Self {
+    pub fn new(room_id: u64, uid: u64, token: &str, servers: &[String]) -> Self {
         Self {
             room_id,
             uid,
