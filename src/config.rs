@@ -19,8 +19,6 @@ pub struct StreamConfig {
     pub servers: Vec<String>,
     // retry config
     pub retry: RetryConfig,
-    // buffer config
-    pub buffer: BufferConfig,
 }
 
 impl StreamConfig {
@@ -31,7 +29,6 @@ impl StreamConfig {
         token: &str,
         servers: &[String],
         retry: RetryConfig,
-        buffer: BufferConfig,
     ) -> Self {
         Self {
             room_id,
@@ -39,30 +36,6 @@ impl StreamConfig {
             token: token.to_string(),
             servers: servers.to_vec(),
             retry,
-            buffer,
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct BufferConfig {
-    // Sink buffer capacity. Panic when sink is full.
-    pub tx_buffer: usize,
-    // Stream buffer capacity. New messages will be dropped once buffer is full.
-    pub rx_buffer: usize,
-    // Buffer length for conn events.
-    pub conn_event_buffer: usize,
-    // Length of buffer used when sending socket from conn task to worker tasks.
-    pub socket_buffer: usize,
-}
-
-impl Default for BufferConfig {
-    fn default() -> Self {
-        Self {
-            tx_buffer: 32,
-            rx_buffer: 128,
-            conn_event_buffer: 8,
-            socket_buffer: 8,
         }
     }
 }
