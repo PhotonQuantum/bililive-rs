@@ -31,25 +31,17 @@ async fn main() -> Result<()> {
         .await?
         .fetch_conf()
         .await?
-        // .servers(&["wss://broadcastlv.chat.bilibili.com/sub".to_string()])
         .build()?;
     info!("room_id: {}", config.room_id);
     info!("uid: {}", config.uid);
     info!("token: {}", config.token);
     info!("servers: {:#?}", config.servers);
 
-    // let mut stream = BililiveStreamNew::new(ws);
     let mut stream = connect_with_retry(config, RetryConfig::default())
         .await
         .unwrap();
 
     test_func(&mut stream).await;
-    // let mut stream = BililiveStream::new(config);
-    // let _ = tokio::time::timeout(Duration::from_secs(60), test_func(&mut stream)).await;
-    // info!("disconnecting");
-    // stream.close();
-    // info!("joining");
-    // stream.join().await;
 
     Ok(())
 }

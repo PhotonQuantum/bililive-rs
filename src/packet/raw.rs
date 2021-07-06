@@ -3,7 +3,7 @@ use std::io::{Cursor, Read};
 use flate2::read::ZlibDecoder;
 use nom::Err;
 
-use crate::{IncompleteResult, ParseError};
+use crate::errors::{IncompleteResult, ParseError};
 
 use super::types::{Operation, Protocol};
 
