@@ -3,9 +3,9 @@ use futures::{Stream, StreamExt};
 use log::info;
 use serde_json::Value;
 
-use bililive_lib::{ConfigBuilder, Packet, StreamError, connect_with_retry};
+use bililive_lib::{ConfigBuilder, Packet, connect_with_retry, BililiveError};
 
-async fn test_func(stream: &mut (impl Stream<Item = Result<Packet, StreamError>> + Unpin)) {
+async fn test_func(stream: &mut (impl Stream<Item = Result<Packet, BililiveError>> + Unpin)) {
     while let Some(e) = stream.next().await {
         match e {
             Ok(packet) => {
