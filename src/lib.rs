@@ -3,13 +3,13 @@ use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::{Error as WsError, Message};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
+pub use crate::builder::ConfigBuilder;
+pub use crate::config::{RetryConfig, StreamConfig};
+pub use crate::errors::BililiveError;
 use crate::errors::Result;
+pub use crate::packet::{Operation, Packet, Protocol};
 use crate::stream::retry::RetryContext;
 pub use crate::stream::BililiveStream;
-pub use crate::builder::ConfigBuilder;
-pub use crate::config::{StreamConfig, RetryConfig};
-pub use crate::errors::BililiveError;
-pub use crate::packet::{Packet, Protocol, Operation};
 
 #[macro_use]
 mod utils;
