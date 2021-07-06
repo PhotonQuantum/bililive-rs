@@ -1,12 +1,9 @@
 use anyhow::Result;
-use futures::{SinkExt, Stream, StreamExt};
+use futures::{Stream, StreamExt};
 use log::info;
-use serde_json::{json, Value};
-use tokio_tungstenite::connect_async;
-use tokio_tungstenite::tungstenite::Message;
+use serde_json::Value;
 
-use bililive_lib::packet::raw::RawPacket;
-use bililive_lib::{BililiveStreamNew, ConfigBuilder, Operation, Packet, Protocol, StreamError, connect_with_retry};
+use bililive_lib::{ConfigBuilder, Packet, StreamError, connect_with_retry};
 
 async fn test_func(stream: &mut (impl Stream<Item = Result<Packet, StreamError>> + Unpin)) {
     while let Some(e) = stream.next().await {
@@ -40,7 +37,7 @@ async fn main() -> Result<()> {
     info!("servers: {:#?}", config.servers);
 
     // let mut stream = BililiveStreamNew::new(ws);
-    let mut stream = connect_with_retry(&config).await.unwrap();
+    let mut stream = connect_with_retry(config).await.unwrap();
 
     test_func(&mut stream).await;
     // let mut stream = BililiveStream::new(config);
