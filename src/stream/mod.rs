@@ -1,13 +1,8 @@
-pub mod retry;
-mod waker;
-mod utils;
-
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll, Waker};
 use std::time::{Duration, Instant};
 
-use self::waker::*;
 use futures::{ready, Sink, Stream};
 use log::{debug, warn};
 use once_cell::sync::Lazy;
@@ -15,7 +10,16 @@ use tokio_tungstenite::tungstenite::{error::Error as WsError, Message};
 
 use crate::packet::{Operation, Packet, Protocol};
 use crate::raw::RawPacket;
-use crate::{IncompleteResult, BililiveError};
+use crate::{BililiveError, IncompleteResult};
+
+use self::waker::*;
+
+pub mod retry;
+mod utils;
+mod waker;
+
+#[cfg(test)]
+mod tests;
 
 type StreamResult<T> = std::result::Result<T, BililiveError>;
 
@@ -59,7 +63,9 @@ where
 
         // check whether we need to send heartbeat now.
         let now = Instant::now();
-        let need_hb = self.last_hb.map_or(true, |last_hb| now - last_hb >= Duration::from_secs(30));
+        let need_hb = self
+            .last_hb
+            .map_or(true, |last_hb| now - last_hb >= Duration::from_secs(30));
 
         if need_hb {
             // we need to send heartbeat, so push it into the sink
@@ -111,7 +117,7 @@ where
                                 }
                                 IncompleteResult::Err(e) => {
                                     warn!("error occurred when parsing incoming packet");
-                                    return Poll::Ready(Some(Err(e)))
+                                    return Poll::Ready(Some(Err(e)));
                                 }
                             }
                         } else {
