@@ -1,220 +1,179 @@
+pub mod retry;
+mod waker;
+mod utils;
+
 use std::pin::Pin;
 use std::sync::Arc;
-use std::task::{Context, Poll};
+use std::task::{Context, Poll, Waker};
+use std::time::{Duration, Instant};
 
-use futures::stream::{SplitSink, SplitStream};
-use futures::{sink::Sink, stream::Stream};
-use tokio::net::TcpStream;
-use tokio::runtime::Handle;
-use tokio::sync::{broadcast, mpsc};
-use tokio::task::JoinHandle;
-use tokio_tungstenite::tungstenite::Message;
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
-
-pub use crate::config::*;
-use crate::errors::StreamError;
-use crate::packet::raw::RawPacket;
-use crate::packet::Packet;
-
-use self::state::*;
-use self::tasks::{conn_task, heart_beat_task, rx_task, tx_task};
 use self::waker::*;
+use futures::{ready, Sink, Stream};
+use log::{debug, warn};
+use once_cell::sync::Lazy;
+use tokio_tungstenite::tungstenite::{error::Error as WsError, Message};
 
-mod state;
-mod tasks;
-mod utils;
-mod waker;
+use crate::errors::StreamError;
+use crate::packet::{Operation, Packet, Protocol};
+use crate::raw::RawPacket;
+use crate::IncompleteResult;
 
-#[cfg(test)]
-mod tests;
+type StreamResult<T> = std::result::Result<T, StreamError>;
 
-type WsTxType = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
-type WsRxType = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
-type ConnTxType = broadcast::Sender<ConnEvent>;
-type ConnRxType = broadcast::Receiver<ConnEvent>;
-type SinkTxType = mpsc::Sender<Message>;
-type SinkRxType = mpsc::Receiver<Message>;
-type Result<T> = std::result::Result<T, StreamError>;
-type StdResult<T, E> = std::result::Result<T, E>;
+static HB_MSG: Lazy<Packet> =
+    Lazy::new(|| Packet::new(Operation::HeartBeat, Protocol::Json, vec![]));
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub enum ConnEvent {
-    Close,
-    Failure,
+pub struct BililiveStream<T> {
+    // underlying websocket stream
+    stream: T,
+    // waker proxy for tx, see WakerProxy for details
+    tx_waker: Arc<WakerProxy>,
+    // last time when heart beat is sent
+    last_hb: Option<Instant>,
+    // rx buffer
+    read_buffer: Vec<u8>,
 }
 
-#[derive(Debug)]
-pub struct Handles {
-    tx_task: JoinHandle<()>,
-    rx_task: JoinHandle<()>,
-    conn_task: JoinHandle<()>,
-    heart_beat_task: JoinHandle<()>,
-}
-
-impl Handles {
-    pub async fn join(&mut self) {
-        (&mut self.tx_task).await.unwrap();
-        (&mut self.rx_task).await.unwrap();
-        (&mut self.conn_task).await.unwrap();
-        (&mut self.heart_beat_task).await.unwrap();
-    }
-}
-
-#[derive(Debug)]
-pub struct BililiveStream {
-    // rx/tx wakers
-    waker: Arc<WakerProxy>,
-    // connection state
-    state: Arc<StreamStateStore>,
-    // receiver of rx channel (sender is in RxTask)
-    rx_receiver: mpsc::Receiver<Result<Packet>>,
-    // sender of tx channel (receiver is in TxTask)
-    tx_sender: Arc<mpsc::Sender<Message>>,
-    // tx buffer capacity
-    tx_buffer_cap: usize,
-    // conn event tx
-    conn_tx: broadcast::Sender<ConnEvent>,
-    // task handles
-    handles: Handles,
-}
-
-impl BililiveStream {
-    pub fn new(config: StreamConfig) -> Self {
-        let state = Arc::new(StreamStateStore::new());
-        let waker = Arc::new(WakerProxy::new());
-
-        let (ws_tx_sender, ws_tx_receiver) = mpsc::channel(config.buffer.socket_buffer);
-        let (ws_rx_sender, ws_rx_receiver) = mpsc::channel(config.buffer.socket_buffer);
-        let (conn_tx, conn_rx) = broadcast::channel(config.buffer.conn_event_buffer);
-        let (tx_buffer_sender, tx_buffer_receiver) = mpsc::channel(config.buffer.tx_buffer);
-        let (rx_buffer_sender, rx_buffer_receiver) = mpsc::channel(config.buffer.rx_buffer);
-
-        let tx_buffer_cap = config.buffer.tx_buffer;
-
-        let tx_task = {
-            let conn_tx = conn_tx.clone();
-            let conn_rx = conn_tx.subscribe();
-            tx_task(
-                ws_tx_receiver,
-                tx_buffer_receiver,
-                (conn_tx, conn_rx),
-                state.clone(),
-                waker.clone(),
-            )
-        };
-        let rx_task = {
-            let conn_tx = conn_tx.clone();
-            let conn_rx = conn_tx.subscribe();
-            rx_task(
-                ws_rx_receiver,
-                rx_buffer_sender,
-                (conn_tx, conn_rx),
-                state.clone(),
-                waker.clone(),
-            )
-        };
-        let conn_task = {
-            let conn_rx = conn_tx.subscribe();
-            conn_task(
-                config,
-                ws_tx_sender,
-                ws_rx_sender,
-                (conn_tx.clone(), conn_rx),
-                state.clone(),
-                waker.clone(),
-            )
-        };
-        let heart_beat_task = heart_beat_task(tx_buffer_sender.clone(), conn_rx, state.clone());
-
-        let handles = Handles {
-            tx_task: tokio::spawn(tx_task),
-            rx_task: tokio::spawn(rx_task),
-            conn_task: tokio::spawn(conn_task),
-            heart_beat_task: tokio::spawn(heart_beat_task),
-        };
-
+impl<T> BililiveStream<T> {
+    pub fn new(stream: T) -> Self {
         Self {
-            waker,
-            state,
-            rx_receiver: rx_buffer_receiver,
-            tx_sender: Arc::new(tx_buffer_sender),
-            tx_buffer_cap,
-            conn_tx,
-            handles,
+            stream,
+            tx_waker: Arc::new(Default::default()),
+            last_hb: None,
+            read_buffer: vec![],
         }
     }
-
-    pub fn close(&self) {
-        self.conn_tx.send(ConnEvent::Close).unwrap();
-    }
-
-    pub async fn join(&mut self) {
-        self.handles.join().await;
-    }
 }
 
-impl Stream for BililiveStream {
-    type Item = Result<Packet>;
+impl<T> Stream for BililiveStream<T>
+where
+    T: Stream<Item = Result<Message, WsError>> + Sink<Message, Error = WsError> + Unpin,
+{
+    type Item = StreamResult<Packet>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        match self.state.load() {
-            StreamState::Active => self.rx_receiver.poll_recv(cx),
-            StreamState::Establishing => {
-                self.waker.register(WakeMode::Rx, cx.waker());
-                Poll::Pending
+        // register current task to be waken on poll_ready
+        self.tx_waker.rx(cx.waker());
+
+        // ensure that all pending write op are completed
+        ready!(self.as_mut().poll_ready(cx))?;
+
+        // check whether we need to send heartbeat now.
+        let now = Instant::now();
+        let need_hb = if let Some(last_hb) = self.last_hb {
+            now - last_hb >= Duration::from_secs(30)
+        } else {
+            true
+        };
+
+        if need_hb {
+            // we need to send heartbeat, so push it into the sink
+            debug!("sending heartbeat");
+            self.as_mut().start_send(HB_MSG.clone())?;
+
+            // Update the time we sent the heartbeat.
+            // It must be earlier than other non-blocking op so that heartbeat
+            // won't be sent repeatedly.
+            self.last_hb = Some(now);
+
+            // Schedule current task to be waken in case there's no incoming
+            // websocket message in a long time.
+            debug!("scheduling task awake");
+            let waker = cx.waker().clone();
+            tokio::spawn(async {
+                debug!("awake task online");
+                tokio::time::sleep(Duration::from_secs(30)).await;
+                debug!("waking read task");
+                waker.wake();
+            });
+        }
+
+        // ensure that heartbeat is sent
+        ready!(self.as_mut().poll_flush(cx))?;
+
+        loop {
+            // poll the underlying websocket stream
+            if let Some(msg) = ready!(Pin::new(&mut self.stream).poll_next(cx)) {
+                match msg {
+                    Ok(msg) => {
+                        if msg.is_binary() {
+                            // append data to the end of the buffer
+                            self.read_buffer.extend(msg.into_data());
+                            // parse the message
+                            match RawPacket::parse(&self.read_buffer) {
+                                IncompleteResult::Ok((remaining, raw)) => {
+                                    debug!("packet parsed, {} bytes remaining", remaining.len());
+
+                                    // remove parsed bytes
+                                    let consume_len = self.read_buffer.len() - remaining.len();
+                                    drop(self.read_buffer.drain(..consume_len));
+
+                                    let pack = Packet::from(raw);
+                                    return Poll::Ready(Some(Ok(pack)));
+                                }
+                                IncompleteResult::Incomplete(needed) => {
+                                    debug!("incomplete packet, {:?} needed", needed);
+                                }
+                                IncompleteResult::Err(_) => {
+                                    warn!("error occurred when parsing incoming packet");
+                                    // TODO returning error
+                                }
+                            }
+                        } else {
+                            debug!("not a binary message, dropping");
+                        }
+                    }
+                    Err(e) => {
+                        // underlying websocket error, closing connection
+                        warn!("error occurred when receiving message: {:?}", e);
+                        return Poll::Ready(None);
+                    }
+                }
+            } else {
+                // underlying websocket closing
+                return Poll::Ready(None);
             }
-            StreamState::Terminated => Poll::Ready(None),
         }
     }
 }
 
-impl Sink<Packet> for BililiveStream {
+impl<T> Sink<Packet> for BililiveStream<T>
+where
+    T: Sink<Message, Error = WsError> + Unpin,
+{
     type Error = StreamError;
 
-    fn poll_ready(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<StdResult<(), Self::Error>> {
-        match self.state.load() {
-            StreamState::Active => Poll::Ready(Ok(())),
-            StreamState::Establishing => {
-                self.waker.register(WakeMode::Tx, cx.waker());
-                Poll::Pending
-            }
-            StreamState::Terminated => Poll::Ready(Err(StreamError::AlreadyClosed)),
-        }
+    fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        // wake current task and stream task
+        self.tx_waker.tx(cx.waker());
+        let waker = Waker::from(self.tx_waker.clone());
+        let mut cx = Context::from_waker(&waker);
+
+        // poll the underlying websocket sink
+        Poll::Ready(Ok(ready!(Pin::new(&mut self.stream).poll_ready(&mut cx))?))
     }
 
-    fn start_send(self: Pin<&mut Self>, item: Packet) -> StdResult<(), Self::Error> {
-        let raw_packet = RawPacket::from(item);
-        let frame = Message::binary(raw_packet);
-        let rt = Handle::current();
-        let tx_sender = self.tx_sender.clone();
-        rt.spawn(async {
-            let tx_sender = tx_sender;
-            drop(tx_sender.send(frame).await);
-        });
-        Ok(())
+    fn start_send(mut self: Pin<&mut Self>, item: Packet) -> Result<(), Self::Error> {
+        Ok(Pin::new(&mut self.stream).start_send(Message::binary(RawPacket::from(item)))?)
     }
 
-    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<StdResult<(), Self::Error>> {
-        if self.tx_sender.capacity() == self.tx_buffer_cap {
-            // Tx buffer is empty.
-            Poll::Ready(Ok(()))
-        } else {
-            match self.state.load() {
-                StreamState::Active | StreamState::Establishing => {
-                    // Buffer is not empty, and connection is up.
-                    // The TxTask is processing the packets.
-                    self.waker.register(WakeMode::Tx, cx.waker());
-                    Poll::Pending
-                }
-                StreamState::Terminated => {
-                    // Connection is terminated and the sink can no longer send any packet.
-                    Poll::Ready(Err(StreamError::AlreadyClosed))
-                }
-            }
-        }
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        // wake current task and stream task
+        self.tx_waker.tx(cx.waker());
+        let waker = Waker::from(self.tx_waker.clone());
+        let mut cx = Context::from_waker(&waker);
+
+        // poll the underlying websocket sink
+        Poll::Ready(Ok(ready!(Pin::new(&mut self.stream).poll_flush(&mut cx))?))
     }
 
-    fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<StdResult<(), Self::Error>> {
-        self.poll_flush(cx)
+    fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        // wake current task and stream task
+        self.tx_waker.tx(cx.waker());
+        let waker = Waker::from(self.tx_waker.clone());
+        let mut cx = Context::from_waker(&waker);
+
+        // poll the underlying websocket sink
+        Poll::Ready(Ok(ready!(Pin::new(&mut self.stream).poll_close(&mut cx))?))
     }
 }
