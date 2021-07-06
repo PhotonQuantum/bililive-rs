@@ -9,8 +9,8 @@ use once_cell::sync::Lazy;
 use tokio_tungstenite::tungstenite::{error::Error as WsError, Message};
 
 use crate::packet::{Operation, Packet, Protocol};
-use crate::raw::RawPacket;
-use crate::{BililiveError, IncompleteResult};
+use crate::packet::raw::RawPacket;
+use crate::errors::{BililiveError, IncompleteResult};
 
 use self::waker::*;
 

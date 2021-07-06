@@ -5,8 +5,8 @@ use serde::Deserialize;
 pub use types::*;
 
 use crate::errors::Result;
-use crate::raw::RawPacket;
-use crate::ParseError;
+use self::raw::RawPacket;
+use crate::errors::ParseError;
 
 mod parser;
 pub mod raw;
