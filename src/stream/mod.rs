@@ -13,12 +13,11 @@ use log::{debug, warn};
 use once_cell::sync::Lazy;
 use tokio_tungstenite::tungstenite::{error::Error as WsError, Message};
 
-use crate::errors::StreamError;
 use crate::packet::{Operation, Packet, Protocol};
 use crate::raw::RawPacket;
-use crate::IncompleteResult;
+use crate::{IncompleteResult, BililiveError};
 
-type StreamResult<T> = std::result::Result<T, StreamError>;
+type StreamResult<T> = std::result::Result<T, BililiveError>;
 
 static HB_MSG: Lazy<Packet> =
     Lazy::new(|| Packet::new(Operation::HeartBeat, Protocol::Json, vec![]));
@@ -114,9 +113,9 @@ where
                                 IncompleteResult::Incomplete(needed) => {
                                     debug!("incomplete packet, {:?} needed", needed);
                                 }
-                                IncompleteResult::Err(_) => {
+                                IncompleteResult::Err(e) => {
                                     warn!("error occurred when parsing incoming packet");
-                                    // TODO returning error
+                                    return Poll::Ready(Some(Err(e)))
                                 }
                             }
                         } else {
@@ -141,7 +140,7 @@ impl<T> Sink<Packet> for BililiveStream<T>
 where
     T: Sink<Message, Error = WsError> + Unpin,
 {
-    type Error = StreamError;
+    type Error = BililiveError;
 
     fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         // wake current task and stream task
