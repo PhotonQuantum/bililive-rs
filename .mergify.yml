@@ -3,7 +3,8 @@ pull_request_rules:
     conditions:
       - author=dependabot[bot]
       - check-success=Lint
-      - check-success=Test
+      - check-success=Test (tokio)
+      - check-success=Test (async-std)
     actions:
       merge:
         method: squash

@@ -39,8 +39,8 @@ jobs:
           command: clippy
           args: --all-targets --all-features
 
-  test:
-    name: Test
+  test_tokio:
+    name: Test (tokio)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -51,7 +51,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-stable-${{ hashFiles('**/Cargo.lock') }}-test
+          key: ${{ runner.os }}-cargo-stable-${{ hashFiles('**/Cargo.lock') }}-test-tokio
       - uses: actions-rs/toolchain@v1
         name: Setup Cargo Toolchain 🛎️
         with:
@@ -62,4 +62,29 @@ jobs:
         name: Running Tests 🚀
         with:
           command: test
-          args: --all-features --workspace
+          args: --workspace
+
+  test_async:
+    name: Test (async-std)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout 🛎️
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-stable-${{ hashFiles('**/Cargo.lock') }}-test-async
+      - uses: actions-rs/toolchain@v1
+        name: Setup Cargo Toolchain 🛎️
+        with:
+          profile: minimal
+          toolchain: stable
+          default: true
+      - uses: actions-rs/cargo@v1
+        name: Running Tests 🚀
+        with:
+          command: test
+          args: --no-default-features --features async-native-tls --workspace
