@@ -22,7 +22,7 @@ pub struct Packet {
 
 impl Packet {
     pub fn new<T: Into<Vec<u8>>>(op: Operation, proto: Protocol, data: T) -> Self {
-        Packet {
+        Self {
             op,
             proto,
             data: data.into(),
@@ -52,7 +52,7 @@ impl Packet {
 
 impl From<RawPacket> for Packet {
     fn from(pack: RawPacket) -> Self {
-        Packet {
+        Self {
             op: pack.op,
             proto: pack.protocol_version,
             data: pack.data,
@@ -62,6 +62,6 @@ impl From<RawPacket> for Packet {
 
 impl From<Packet> for RawPacket {
     fn from(pack: Packet) -> Self {
-        RawPacket::new(pack.op, pack.proto, pack.data)
+        Self::new(pack.op, pack.proto, pack.data)
     }
 }

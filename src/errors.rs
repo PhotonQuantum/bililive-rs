@@ -44,8 +44,8 @@ impl From<http_client::Error> for HTTPError {
 #[cfg(feature = "reqwest")]
 impl From<reqwest::Error> for HTTPError {
     fn from(e: reqwest::Error) -> Self {
-        let status = e.status().map(|code| code.as_u16()).unwrap_or(500);
-        HTTPError(http_client::Error::new(status, e))
+        let status = e.status().map_or(500, |code| code.as_u16());
+        Self(http_client::Error::new(status, e))
     }
 }
 
@@ -73,13 +73,13 @@ pub enum BililiveError {
 
 impl From<http_client::Error> for BililiveError {
     fn from(e: http_client::Error) -> Self {
-        BililiveError::HTTP(e.into())
+        Self::HTTP(e.into())
     }
 }
 
 #[cfg(feature = "reqwest")]
 impl From<reqwest::Error> for BililiveError {
     fn from(e: reqwest::Error) -> Self {
-        BililiveError::HTTP(e.into())
+        Self::HTTP(e.into())
     }
 }

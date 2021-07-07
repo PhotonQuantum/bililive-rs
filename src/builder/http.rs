@@ -5,7 +5,7 @@ use serde::de::DeserializeOwned;
 use crate::errors::{ParseError, Result};
 
 #[derive(Debug)]
-pub(crate) enum HTTPClient {
+pub enum HTTPClient {
     #[cfg(feature = "h1-client")]
     H1(http_client::h1::H1Client),
     #[cfg(feature = "reqwest")]
