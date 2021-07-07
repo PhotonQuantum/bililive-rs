@@ -1,5 +1,5 @@
+use async_tungstenite::tungstenite::Message;
 use serde_json::json;
-use tokio_tungstenite::tungstenite::Message;
 
 use crate::config::StreamConfig;
 use crate::packet::raw::RawPacket;

@@ -3,25 +3,8 @@ use futures::{Stream, StreamExt};
 use log::info;
 use serde_json::Value;
 
-use bililive_lib::{connect_with_retry, BililiveError, ConfigBuilder, Packet, RetryConfig};
-
-async fn test_func(
-    stream: &mut (impl Stream<Item = Result<Packet, BililiveError>> + Send + Unpin),
-) {
-    while let Some(e) = stream.next().await {
-        match e {
-            Ok(packet) => {
-                info!("raw: {:?}", packet);
-                if let Ok(json) = packet.json::<Value>() {
-                    info!("json: {:?}", json);
-                }
-            }
-            Err(e) => {
-                info!("err: {:?}", e);
-            }
-        }
-    }
-}
+use bililive_lib::tokio::connect_with_retry;
+use bililive_lib::{BililiveError, ConfigBuilder, Packet, RetryConfig};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -41,7 +24,19 @@ async fn main() -> Result<()> {
         .await
         .unwrap();
 
-    test_func(&mut stream).await;
+    while let Some(e) = stream.next().await {
+        match e {
+            Ok(packet) => {
+                info!("raw: {:?}", packet);
+                if let Ok(json) = packet.json::<Value>() {
+                    info!("json: {:?}", json);
+                }
+            }
+            Err(e) => {
+                info!("err: {:?}", e);
+            }
+        }
+    }
 
     Ok(())
 }

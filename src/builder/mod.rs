@@ -1,41 +1,26 @@
+use crate::builder::http::HTTPClient;
 use crate::builder::types::{ConfQueryInner, Resp, RoomQueryInner};
 use crate::config::StreamConfig;
 use crate::errors::{BililiveError, ParseError, Result};
 
+mod http;
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
 mod types;
 
+#[derive(Debug, Default)]
 pub struct ConfigBuilder {
-    http: reqwest::Client,
+    http: HTTPClient,
     room_id: Option<u64>,
     uid: Option<u64>,
     token: Option<String>,
     servers: Option<Vec<String>>,
 }
 
-impl Default for ConfigBuilder {
-    #[must_use]
-    fn default() -> Self {
-        Self::new_with_http(Default::default())
-    }
-}
-
 impl ConfigBuilder {
     #[must_use]
     pub fn new() -> Self {
         Default::default()
-    }
-
-    #[must_use]
-    pub fn new_with_http(http: reqwest::Client) -> Self {
-        Self {
-            http,
-            room_id: None,
-            uid: None,
-            token: None,
-            servers: None,
-        }
     }
 
     setter_option_copy!(room_id, u64);
@@ -54,17 +39,13 @@ impl ConfigBuilder {
     }
 
     pub async fn by_uid(mut self, uid: u64) -> Result<Self> {
-        let data = self
+        let resp: Resp<RoomQueryInner> = self
             .http
-            .get(format!(
+            .get_json(&*format!(
                 "https://api.live.bilibili.com/bili/living_v2/{}",
                 uid
             ))
-            .send()
-            .await?
-            .bytes()
             .await?;
-        let resp: Resp<RoomQueryInner> = serde_json::from_slice(&data).map_err(ParseError::JSON)?;
         let room_id = resp.room_id().ok_or(ParseError::RoomId)?;
 
         self.room_id = Some(room_id);
@@ -73,14 +54,10 @@ impl ConfigBuilder {
     }
 
     pub async fn fetch_conf(mut self) -> Result<Self> {
-        let data = self
+        let resp: Resp<ConfQueryInner> = self
             .http
-            .get("https://api.live.bilibili.com/room/v1/Danmu/getConf")
-            .send()
-            .await?
-            .bytes()
+            .get_json("https://api.live.bilibili.com/room/v1/Danmu/getConf")
             .await?;
-        let resp: Resp<ConfQueryInner> = serde_json::from_slice(&data).map_err(ParseError::JSON)?;
 
         self.token = Some(resp.token().to_string());
         self.servers = Some(resp.servers());

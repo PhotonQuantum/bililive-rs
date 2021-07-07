@@ -1,4 +1,4 @@
-use crate::ConfigBuilder;
+use crate::{ConfigBuilder, StreamConfig};
 
 use super::types::{ConfQueryInner, Resp, RoomQueryInner};
 
@@ -29,8 +29,8 @@ fn must_parse_conf() {
     )
 }
 
-#[tokio::test]
-async fn must_build_client() {
+#[test]
+fn must_build_config() {
     ConfigBuilder::new()
         .room_id(1016)
         .uid(0)
@@ -40,15 +40,30 @@ async fn must_build_client() {
         .expect("unable to build client");
 }
 
-#[tokio::test]
-async fn must_build_client_real() {
-    ConfigBuilder::new()
+pub(crate) async fn build_real_config(override_servers: bool) -> StreamConfig {
+    let builder = ConfigBuilder::new()
         .by_uid(419220)
         .await
-        .unwrap()
+        .expect("unable to fetch room_id")
         .fetch_conf()
         .await
-        .unwrap()
-        .build()
-        .expect("unable to build client");
+        .expect("unable to fetch server conf");
+    let builder = if override_servers {
+        builder.servers(&["wss://broadcastlv.chat.bilibili.com/sub".to_string()])
+    } else {
+        builder
+    };
+    builder.build().expect("unable to build client")
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn must_build_real_config_tokio() {
+    build_real_config(false).await;
+}
+
+#[cfg(feature = "async-std")]
+#[async_std::test]
+async fn must_build_real_config_async_std() {
+    build_real_config(false).await;
 }

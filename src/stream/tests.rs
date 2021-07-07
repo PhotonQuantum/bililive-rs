@@ -2,10 +2,31 @@ use std::time::Duration;
 
 use futures::{Sink, SinkExt, Stream, StreamExt};
 
-use crate::{
-    connect, connect_with_retry, BililiveError, ConfigBuilder, Operation, Packet, Protocol,
-    RetryConfig,
-};
+use crate::builder::tests::build_real_config;
+use crate::{BililiveError, Operation, Packet, Protocol, RetryConfig};
+
+macro_rules! must_future_timeout {
+    ($secs: literal, $future: expr) => {{
+        let fut = $future;
+        if cfg!(feature = "tokio") {
+            #[cfg(feature = "tokio")]
+            assert!(
+                tokio::time::timeout(Duration::from_secs($secs), fut)
+                    .await
+                    .is_err(),
+                "future not timeout"
+            );
+        } else {
+            #[cfg(feature = "async-std")]
+            assert!(
+                async_std::future::timeout(Duration::from_secs($secs), fut)
+                    .await
+                    .is_err(),
+                "future not timeout"
+            );
+        };
+    }};
+}
 
 async fn test_stream(
     mut stream: impl Stream<Item = Result<Packet, BililiveError>>
@@ -21,12 +42,7 @@ async fn test_stream(
         }
     };
     // err means timeout indicating there's no early stop on stream
-    assert!(
-        tokio::time::timeout(Duration::from_secs(3), stream_try)
-            .await
-            .is_err(),
-        "stream error"
-    );
+    must_future_timeout!(3, stream_try);
 
     stream
         .send(Packet::new(Operation::HeartBeat, Protocol::Json, vec![]))
@@ -42,49 +58,51 @@ async fn test_stream(
         }
     };
     // err means timeout indicating there's no early stop on stream
-    assert!(
-        tokio::time::timeout(Duration::from_secs(1), stream_try)
-            .await
-            .is_err(),
-        "stream error"
-    );
+    must_future_timeout!(1, stream_try);
     assert!(hb_resp_received, "no heart beat response received");
 
     stream.close().await.expect("unable to close stream");
 }
 
+#[cfg(feature = "tokio")]
 #[tokio::test(flavor = "multi_thread", worker_threads = 6)]
-async fn must_stream() {
-    let config = ConfigBuilder::new()
-        .by_uid(419220)
-        .await
-        .unwrap()
-        .fetch_conf()
-        .await
-        .unwrap()
-        .servers(&["wss://broadcastlv.chat.bilibili.com/sub".to_string()])
-        .build()
-        .expect("unable to build config");
+async fn must_stream_tokio() {
+    let config = build_real_config(true).await;
 
-    let stream = connect(config)
+    let stream = crate::tokio::connect(config)
         .await
         .expect("unable to establish connection");
     test_stream(stream).await;
 }
 
+#[cfg(feature = "tokio")]
 #[tokio::test(flavor = "multi_thread", worker_threads = 6)]
 async fn must_retry_stream() {
-    let config = ConfigBuilder::new()
-        .by_uid(419220)
-        .await
-        .unwrap()
-        .fetch_conf()
-        .await
-        .unwrap()
-        .build()
-        .expect("unable to build config");
+    let config = build_real_config(false).await;
 
-    let stream = connect_with_retry(config, RetryConfig::default())
+    let stream = crate::tokio::connect_with_retry(config, RetryConfig::default())
+        .await
+        .expect("unable to establish connection");
+    test_stream(stream).await;
+}
+
+#[cfg(feature = "async-std")]
+#[async_std::test]
+async fn must_stream_async_std() {
+    let config = build_real_config(true).await;
+
+    let stream = crate::async_std::connect(config)
+        .await
+        .expect("unable to establish connection");
+    test_stream(stream).await;
+}
+
+#[cfg(feature = "async-std")]
+#[async_std::test]
+async fn must_retry_async_std() {
+    let config = build_real_config(false).await;
+
+    let stream = crate::async_std::connect_with_retry(config, RetryConfig::default())
         .await
         .expect("unable to establish connection");
     test_stream(stream).await;

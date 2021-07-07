@@ -3,10 +3,10 @@ use std::sync::Arc;
 use std::task::{Context, Poll, Waker};
 use std::time::{Duration, Instant};
 
+use async_tungstenite::tungstenite::{error::Error as WsError, Message};
 use futures::{ready, Sink, Stream};
 use log::{debug, warn};
 use once_cell::sync::Lazy;
-use tokio_tungstenite::tungstenite::{error::Error as WsError, Message};
 
 use crate::errors::{BililiveError, IncompleteResult};
 use crate::packet::raw::RawPacket;
@@ -80,13 +80,26 @@ where
             // Schedule current task to be waken in case there's no incoming
             // websocket message in a long time.
             debug!("scheduling task awake");
-            let waker = cx.waker().clone();
-            tokio::spawn(async {
-                debug!("awake task online");
-                tokio::time::sleep(Duration::from_secs(30)).await;
-                debug!("waking read task");
-                waker.wake();
-            });
+            #[cfg(feature = "tokio")]
+            {
+                let waker = cx.waker().clone();
+                tokio::spawn(async {
+                    debug!("awake task online");
+                    tokio::time::sleep(Duration::from_secs(30)).await;
+                    debug!("waking read task");
+                    waker.wake();
+                });
+            }
+            #[cfg(feature = "async-std")]
+            {
+                let waker = cx.waker().clone();
+                async_std::task::spawn(async {
+                    debug!("awake task online");
+                    async_std::task::sleep(Duration::from_secs(30)).await;
+                    debug!("waking read task");
+                    waker.wake();
+                });
+            }
         }
 
         // ensure that heartbeat is sent
