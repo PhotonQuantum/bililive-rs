@@ -77,7 +77,7 @@ async fn must_stream_tokio() {
 
 #[cfg(feature = "tokio")]
 #[tokio::test(flavor = "multi_thread", worker_threads = 6)]
-async fn must_retry_stream() {
+async fn must_retry_stream_tokio() {
     let config = build_real_config(false).await;
 
     let stream = crate::tokio::connect_with_retry(config, RetryConfig::default())
