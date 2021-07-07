@@ -1,14 +1,13 @@
 use anyhow::Result;
-use futures::{Stream, StreamExt};
+use futures::StreamExt;
 use log::info;
 use serde_json::Value;
 
-use bililive_lib::tokio::connect_with_retry;
-use bililive_lib::{BililiveError, ConfigBuilder, Packet, RetryConfig};
+use bililive::{ConfigBuilder, RetryConfig};
 
-#[tokio::main]
-async fn main() -> Result<()> {
+async fn run() -> Result<()> {
     pretty_env_logger::init();
+
     let config = ConfigBuilder::new()
         .by_uid(1602085)
         .await?
@@ -20,7 +19,12 @@ async fn main() -> Result<()> {
     info!("token: {}", config.token);
     info!("servers: {:#?}", config.servers);
 
-    let mut stream = connect_with_retry(config, RetryConfig::default())
+    #[cfg(feature = "tokio")]
+    let mut stream = bililive::tokio::connect_with_retry(config.clone(), RetryConfig::default())
+        .await
+        .unwrap();
+    #[cfg(feature = "async-std")]
+    let mut stream = bililive::async_std::connect_with_retry(config, RetryConfig::default())
         .await
         .unwrap();
 
@@ -39,4 +43,17 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn main() -> Result<()> {
+    #[cfg(feature = "tokio")]
+    {
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        return runtime.block_on(run());
+    }
+    #[cfg(feature = "async-std")]
+    return async_std::task::block_on(run());
 }
