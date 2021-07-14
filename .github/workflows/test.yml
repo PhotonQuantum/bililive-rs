@@ -37,7 +37,7 @@ jobs:
         name: Run Clippy Lints 🔨
         with:
           command: clippy
-          args: --all-targets --all-features
+          args: --all-targets
 
   test_tokio:
     name: Test (tokio)
