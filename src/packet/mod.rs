@@ -55,8 +55,8 @@ impl Packet {
 impl Packet {
     /// Construct a new packet.
     ///
-    /// To construct a buffer(compressed) packet, you should create a JSON/Int32BE packet first,
-    /// then call [Packet::compress] to convert it to a buffer one.
+    /// To construct a zlib-compressed packet, you should create a JSON/Int32BE packet first,
+    /// then call [Packet::compress] to convert it to a zlib one.
     pub fn new<T: Into<Vec<u8>>>(op: Operation, protocol_version: Protocol, data: T) -> Self {
         let data = data.into();
 
@@ -70,8 +70,7 @@ impl Packet {
         }
     }
 
-    /// Convert a JSON/Int32BE packet to a buffer one.
-    /// The packet will be compressed using zlib.
+    /// Convert a JSON/Int32BE packet to a zlib-compressed one.
     pub fn compress(self) -> Result<Self> {
         let raw = self.encode();
 
@@ -79,7 +78,7 @@ impl Packet {
         z.write_all(&raw)?;
         let data = z.finish()?;
 
-        Ok(Self::new(self.op, Protocol::Buffer, data))
+        Ok(Self::new(self.op, Protocol::Zlib, data))
     }
 }
 
@@ -112,7 +111,7 @@ impl Packet {
     ///
     /// It may fail if the model is incorrect or it's not a json packet.
     /// You may check the type of the packet by [Packet::proto].
-    /// Normally you won't get [Protocol::Buffer] packets because they are handled by BililiveStream and decompressed transparently.
+    /// Normally you won't get [Protocol::Zlib] packets because they are handled by BililiveStream and decompressed transparently.
     pub fn json<'a, T: Deserialize<'a>>(&'a self) -> Result<T> {
         serde_json::from_slice(&self.data).map_err(|e| ParseError::JSON(e).into())
     }
@@ -120,7 +119,7 @@ impl Packet {
     ///
     /// It may fail if it's not a int packet.
     /// You may check the type of the packet by [Packet::proto].
-    /// Normally you won't get [Protocol::Buffer] packets because they are handled by BililiveStream and decompressed transparently.
+    /// Normally you won't get [Protocol::Zlib] packets because they are handled by BililiveStream and decompressed transparently.
     pub fn int32_be(&self) -> Result<i32> {
         Ok(i32::from_be_bytes(
             self.data
@@ -150,7 +149,7 @@ impl Packet {
     pub fn parse(input: &[u8]) -> IncompleteResult<(&[u8], Packet)> {
         match parser::parse(input) {
             Ok((input, packet)) => {
-                if let Protocol::Buffer = packet.protocol_version {
+                if let Protocol::Zlib = packet.protocol_version {
                     let mut z = ZlibDecoder::new(Cursor::new(packet.data));
                     let mut buf = Vec::new();
                     if let Err(e) = z.read_to_end(&mut buf) {

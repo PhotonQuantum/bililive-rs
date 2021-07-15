@@ -31,7 +31,7 @@ impl From<u32> for Operation {
 pub enum Protocol {
     Json = 0,
     Int32BE = 1,
-    Buffer = 2,
+    Zlib = 2,
 }
 
 impl TryFrom<u16> for Protocol {
@@ -41,7 +41,7 @@ impl TryFrom<u16> for Protocol {
         match value {
             0 => Ok(Protocol::Json),
             1 => Ok(Protocol::Int32BE),
-            2 => Ok(Protocol::Buffer),
+            2 => Ok(Protocol::Zlib),
             _ => Err(ParseError::UnknownProtocol),
         }
     }
