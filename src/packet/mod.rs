@@ -15,6 +15,9 @@ use crate::errors::{IncompleteResult, ParseError};
 mod parser;
 mod types;
 
+#[cfg(test)]
+mod tests;
+
 /// Bililive packet
 ///
 /// Packet can be used to encode/parse raw bilibili live packets, and extract information from it.
