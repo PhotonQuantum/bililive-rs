@@ -9,7 +9,6 @@ use log::{debug, warn};
 use once_cell::sync::Lazy;
 
 use crate::errors::{BililiveError, IncompleteResult};
-use crate::packet::raw::RawPacket;
 use crate::packet::{Operation, Packet, Protocol};
 
 use self::waker::*;
@@ -114,15 +113,14 @@ where
                             // append data to the end of the buffer
                             self.read_buffer.extend(msg.into_data());
                             // parse the message
-                            match RawPacket::parse(&self.read_buffer) {
-                                IncompleteResult::Ok((remaining, raw)) => {
+                            match Packet::parse(&self.read_buffer) {
+                                IncompleteResult::Ok((remaining, pack)) => {
                                     debug!("packet parsed, {} bytes remaining", remaining.len());
 
                                     // remove parsed bytes
                                     let consume_len = self.read_buffer.len() - remaining.len();
                                     drop(self.read_buffer.drain(..consume_len));
 
-                                    let pack = Packet::from(raw);
                                     return Poll::Ready(Some(Ok(pack)));
                                 }
                                 IncompleteResult::Incomplete(needed) => {
@@ -168,7 +166,7 @@ where
     }
 
     fn start_send(mut self: Pin<&mut Self>, item: Packet) -> Result<(), Self::Error> {
-        Ok(Pin::new(&mut self.stream).start_send(Message::binary(RawPacket::from(item)))?)
+        Ok(Pin::new(&mut self.stream).start_send(Message::binary(item.encode()))?)
     }
 
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {

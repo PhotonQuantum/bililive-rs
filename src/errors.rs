@@ -63,6 +63,8 @@ pub enum BililiveError {
     HTTP(#[from] HTTPError),
     #[error("parse error: {0}")]
     Parse(#[from] ParseError),
+    #[error("io error: {0}")]
+    IOError(#[from] std::io::Error),
     #[error("build error: missing field {0}")]
     Build(String),
     #[error("websocket error: {0}")]
