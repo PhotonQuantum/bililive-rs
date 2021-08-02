@@ -6,7 +6,6 @@ use std::time::{Duration, Instant};
 use async_tungstenite::tungstenite::{error::Error as WsError, Message};
 use futures::{ready, Sink, Stream};
 use log::{debug, warn};
-use once_cell::sync::Lazy;
 
 use crate::errors::{BililiveError, IncompleteResult};
 use crate::packet::{Operation, Packet, Protocol};
@@ -21,9 +20,6 @@ mod waker;
 mod tests;
 
 type StreamResult<T> = std::result::Result<T, BililiveError>;
-
-static HB_MSG: Lazy<Packet> =
-    Lazy::new(|| Packet::new(Operation::HeartBeat, Protocol::Json, vec![]));
 
 pub struct BililiveStream<T> {
     // underlying websocket stream
@@ -69,7 +65,8 @@ where
         if need_hb {
             // we need to send heartbeat, so push it into the sink
             debug!("sending heartbeat");
-            self.as_mut().start_send(HB_MSG.clone())?;
+            self.as_mut()
+                .start_send(Packet::new(Operation::HeartBeat, Protocol::Json, vec![]))?;
 
             // Update the time we sent the heartbeat.
             // It must be earlier than other non-blocking op so that heartbeat
