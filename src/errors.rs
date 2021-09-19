@@ -1,8 +1,8 @@
-use std::error::Error as StdError;
-use std::fmt::{Display, Formatter};
-
 use nom::Needed;
 use thiserror::Error;
+
+#[cfg(feature = "h1-client")]
+use h1_wrapper::HTTPClientError;
 
 pub type Result<T> = std::result::Result<T, BililiveError>;
 
@@ -28,39 +28,41 @@ pub enum ParseError {
     ZlibError(#[from] std::io::Error),
 }
 
-/// A wrapper type for `http_client::Error`.
-///
-/// For some reason, `http_client::Error` doesn't implement Error trait.
-/// To make it fit into BililiveError, we need to derive Error for it.
-#[derive(Debug)]
-pub struct HTTPError(http_client::Error);
+#[cfg(feature = "h1-client")]
+mod h1_wrapper {
+    use std::error::Error as StdError;
+    use std::fmt::{Display, Formatter};
 
-impl From<http_client::Error> for HTTPError {
-    fn from(e: http_client::Error) -> Self {
-        Self(e)
+    /// A wrapper type for `http_client::Error`.
+    ///
+    /// For some reason, `http_client::Error` doesn't implement Error trait.
+    /// To make it fit into BililiveError, we need to derive Error for it.
+    #[derive(Debug)]
+    pub struct HTTPClientError(http_client::Error);
+
+    impl From<http_client::Error> for HTTPClientError {
+        fn from(e: http_client::Error) -> Self {
+            Self(e)
+        }
     }
-}
 
-#[cfg(feature = "reqwest")]
-impl From<reqwest::Error> for HTTPError {
-    fn from(e: reqwest::Error) -> Self {
-        let status = e.status().map_or(500, |code| code.as_u16());
-        Self(http_client::Error::new(status, e))
-    }
-}
+    impl StdError for HTTPClientError {}
 
-impl StdError for HTTPError {}
-
-impl Display for HTTPError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
+    impl Display for HTTPClientError {
+        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+            self.0.fmt(f)
+        }
     }
 }
 
 #[derive(Debug, Error)]
 pub enum BililiveError {
+    #[cfg(feature = "h1-client")]
     #[error("http error: {0}")]
-    HTTP(#[from] HTTPError),
+    HTTP(HTTPClientError),
+    #[cfg(feature = "reqwest")]
+    #[error("http error: {0}")]
+    HTTP(#[from] reqwest::Error),
     #[error("parse error: {0}")]
     Parse(#[from] ParseError),
     #[error("io error: {0}")]
@@ -73,15 +75,9 @@ pub enum BililiveError {
     NotConnected,
 }
 
+#[cfg(feature = "h1-client")]
 impl From<http_client::Error> for BililiveError {
     fn from(e: http_client::Error) -> Self {
-        Self::HTTP(e.into())
-    }
-}
-
-#[cfg(feature = "reqwest")]
-impl From<reqwest::Error> for BililiveError {
-    fn from(e: reqwest::Error) -> Self {
         Self::HTTP(e.into())
     }
 }

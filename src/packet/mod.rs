@@ -84,23 +84,23 @@ impl Packet {
 
 impl Packet {
     /// Get the packet length.
-    pub fn packet_length(&self) -> u32 {
+    pub const fn packet_length(&self) -> u32 {
         self.packet_length
     }
     /// Get the header length.
-    pub fn header_length(&self) -> u16 {
+    pub const fn header_length(&self) -> u16 {
         self.header_length
     }
     /// Get the sequence id.
-    pub fn seq_id(&self) -> u32 {
+    pub const fn seq_id(&self) -> u32 {
         self.seq_id
     }
     /// Get the operation.
-    pub fn op(&self) -> Operation {
+    pub const fn op(&self) -> Operation {
         self.op
     }
     /// Get the protocol version.
-    pub fn proto(&self) -> Protocol {
+    pub const fn proto(&self) -> Protocol {
         self.protocol_version
     }
     /// Get bytes of the body.

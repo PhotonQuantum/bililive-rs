@@ -10,7 +10,7 @@ use log::{debug, warn};
 use crate::errors::{BililiveError, IncompleteResult};
 use crate::packet::{Operation, Packet, Protocol};
 
-use self::waker::*;
+use self::waker::WakerProxy;
 
 pub mod retry;
 mod utils;

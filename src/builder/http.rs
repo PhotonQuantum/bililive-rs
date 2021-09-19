@@ -23,7 +23,7 @@ impl Default for HTTPClient {
 
 impl HTTPClient {
     #[cfg(feature = "h1-client")]
-    fn get_h1(&self) -> &http_client::h1::H1Client {
+    const fn get_h1(&self) -> &http_client::h1::H1Client {
         match self {
             #[cfg(feature = "h1-client")]
             HTTPClient::H1(c) => c,
@@ -33,7 +33,7 @@ impl HTTPClient {
     }
 
     #[cfg(feature = "reqwest")]
-    fn get_reqwest(&self) -> &reqwest::Client {
+    const fn get_reqwest(&self) -> &reqwest::Client {
         match self {
             #[cfg(feature = "h1-client")]
             HTTPClient::H1(_) => unreachable!(),
