@@ -1867,9 +1867,9 @@ checksum = "213701ba3370744dcd1a12960caa4843b3d68b4d1c0a5d575e0d65b2ee9d16c0"
 
 [[package]]
 name = "stream-reconnect"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c092c6cc60ee44a79d70786152bfcb51e6d41a75a0907859b371374cd3e5aff"
+checksum = "63fa3bedf00d2e4b97b593397cdc9a7560b1abec718589ef2b9177bba4bd8730"
 dependencies = [
  "async-std",
  "futures",
