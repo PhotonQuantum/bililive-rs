@@ -14,7 +14,7 @@ async-native-tls = ["async-std", "async-tungstenite/async-native-tls", "h1-clien
 h1-client = ["http-client/h1_client"]
 
 [dependencies]
-tokio = { version = "1.11", optional = true }
+tokio = { version = "1.12", optional = true }
 async-std = { version = "1.10", optional = true }
 async-tungstenite = { version = "0.15", default-features = false }
 http-client = { version = "6.5", default-features = false, optional = true }
@@ -33,5 +33,5 @@ stream-reconnect = { version = "0.3", default-features = false }
 [dev-dependencies]
 anyhow = "1.0"
 pretty_env_logger = "0.4"
-tokio = { version = "1.11", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.12", features = ["macros", "rt-multi-thread"] }
 async-std = { version = "1.10", features = ["attributes"] }
