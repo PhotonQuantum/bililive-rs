@@ -70,7 +70,6 @@ impl ConfigBuilder {
     ///
     /// # Errors
     /// Returns an error when HTTP api request fails.
-    #[must_use]
     pub async fn by_uid(mut self, uid: u64) -> Result<Self> {
         let resp: Resp<RoomQueryInner> = self
             .http
@@ -90,7 +89,6 @@ impl ConfigBuilder {
     ///
     /// # Errors
     /// Returns an error when HTTP api request fails.
-    #[must_use]
     pub async fn fetch_conf(mut self) -> Result<Self> {
         let resp: Resp<ConfQueryInner> = self
             .http
