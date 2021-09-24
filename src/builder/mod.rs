@@ -1,3 +1,5 @@
+//! Bililive config builders
+
 use crate::builder::http::HTTPClient;
 use crate::builder::types::{ConfQueryInner, Resp, RoomQueryInner};
 use crate::config::StreamConfig;
@@ -8,6 +10,32 @@ mod http;
 pub(crate) mod tests;
 mod types;
 
+/// Bililive stream config builder
+///
+/// Stream config can be built via given live room parameters (room id and user id) & danmaku server configs (server token and list).
+///
+/// # Helper methods
+///
+/// [`by_uid`](ConfigBuilder::by_uid) fetches room id by given user id.
+///
+/// [`fetch_conf`](ConfigBuilder::fetch_conf) fetches danmaku server token and list without any input parameter.
+///
+/// # Example
+///
+/// ```rust
+/// # use bililive::{ConfigBuilder, BililiveError, StreamConfig};
+/// #
+/// # let fut = async {
+/// ConfigBuilder::new()
+///     .by_uid(1472906636)
+///     .await?
+///     .fetch_conf()
+///     .await?
+///     .build()
+/// # };
+/// #
+/// # tokio_test::block_on(fut).unwrap();
+/// ```
 #[derive(Debug, Default)]
 pub struct ConfigBuilder {
     http: HTTPClient,
@@ -38,6 +66,11 @@ impl ConfigBuilder {
         self
     }
 
+    /// Fills `room_id` and `uid` by given `uid`, fetching `room_id` automatically.
+    ///
+    /// # Errors
+    /// Returns an error when HTTP api request fails.
+    #[must_use]
     pub async fn by_uid(mut self, uid: u64) -> Result<Self> {
         let resp: Resp<RoomQueryInner> = self
             .http
@@ -53,6 +86,11 @@ impl ConfigBuilder {
         Ok(self)
     }
 
+    /// Fetches danmaku server configs & uris
+    ///
+    /// # Errors
+    /// Returns an error when HTTP api request fails.
+    #[must_use]
     pub async fn fetch_conf(mut self) -> Result<Self> {
         let resp: Resp<ConfQueryInner> = self
             .http
@@ -64,6 +102,10 @@ impl ConfigBuilder {
         Ok(self)
     }
 
+    /// Consumes the builder and returns [`StreamConfig`](StreamConfig)
+    ///
+    /// # Errors
+    /// Returns an error when there's field missing.
     pub fn build(self) -> Result<StreamConfig> {
         Ok(StreamConfig {
             room_id: self
