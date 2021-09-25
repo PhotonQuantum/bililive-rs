@@ -42,6 +42,7 @@ use bililive::errors::Result;
 use bililive::{ConfigBuilder, RetryConfig};
 
 use futures::StreamExt;
+use log::info;
 use serde_json::Value;
 
 let config = ConfigBuilder::new()

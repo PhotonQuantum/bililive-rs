@@ -20,13 +20,15 @@ async fn run() -> Result<()> {
     info!("servers: {:#?}", config.servers);
 
     #[cfg(feature = "tokio")]
-    let mut stream = bililive::tokio::connect_with_retry(config.clone(), RetryConfig::default())
-        .await
-        .unwrap();
+    let mut stream =
+        bililive::connect::tokio::connect_with_retry(config.clone(), RetryConfig::default())
+            .await
+            .unwrap();
     #[cfg(feature = "async-std")]
-    let mut stream = bililive::async_std::connect_with_retry(config, RetryConfig::default())
-        .await
-        .unwrap();
+    let mut stream =
+        bililive::connect::async_std::connect_with_retry(config, RetryConfig::default())
+            .await
+            .unwrap();
 
     while let Some(e) = stream.next().await {
         match e {

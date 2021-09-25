@@ -25,13 +25,16 @@
 //! ## Example
 //!
 //! ```rust
+//! # #[cfg(feature = "tokio")]
 //! use bililive::connect::tokio::connect_with_retry;
 //! use bililive::errors::Result;
 //! use bililive::{ConfigBuilder, RetryConfig};
 //!
 //! use futures::StreamExt;
+//! use log::info;
 //! use serde_json::Value;
 //!
+//! # #[cfg(feature = "tokio")]
 //! # async fn test() -> Result<()> {
 //! let config = ConfigBuilder::new()
 //!     .by_uid(1602085)

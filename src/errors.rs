@@ -1,8 +1,8 @@
 //! Error types.
+use std::fmt::{Debug, Display, Formatter};
+
 use nom::Needed;
 use thiserror::Error;
-
-use std::fmt::{Debug, Display, Formatter};
 
 /// The result type.
 pub type Result<T> = std::result::Result<T, BililiveError>;

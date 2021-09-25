@@ -69,7 +69,7 @@ async fn test_stream(
 async fn must_stream_tokio() {
     let config = build_real_config(true).await;
 
-    let stream = crate::tokio::connect(config)
+    let stream = crate::connect::tokio::connect(config)
         .await
         .expect("unable to establish connection");
     test_stream(stream).await;
@@ -80,7 +80,7 @@ async fn must_stream_tokio() {
 async fn must_retry_stream_tokio() {
     let config = build_real_config(false).await;
 
-    let stream = crate::tokio::connect_with_retry(config, RetryConfig::default())
+    let stream = crate::connect::tokio::connect_with_retry(config, RetryConfig::default())
         .await
         .expect("unable to establish connection");
     test_stream(stream).await;
@@ -91,7 +91,7 @@ async fn must_retry_stream_tokio() {
 async fn must_stream_async_std() {
     let config = build_real_config(true).await;
 
-    let stream = crate::async_std::connect(config)
+    let stream = crate::connect::async_std::connect(config)
         .await
         .expect("unable to establish connection");
     test_stream(stream).await;
@@ -102,7 +102,7 @@ async fn must_stream_async_std() {
 async fn must_retry_async_std() {
     let config = build_real_config(false).await;
 
-    let stream = crate::async_std::connect_with_retry(config, RetryConfig::default())
+    let stream = crate::connect::async_std::connect_with_retry(config, RetryConfig::default())
         .await
         .expect("unable to establish connection");
     test_stream(stream).await;
