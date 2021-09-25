@@ -1,3 +1,4 @@
+//! Bilibili live stream.
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll, Waker};
@@ -12,7 +13,7 @@ use crate::packet::{Operation, Packet, Protocol};
 
 use self::waker::WakerProxy;
 
-pub mod retry;
+pub(crate) mod retry;
 mod utils;
 mod waker;
 
