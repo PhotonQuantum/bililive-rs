@@ -39,7 +39,7 @@ pub struct BililiveStream<T> {
 }
 
 impl<T> BililiveStream<T> {
-    /// Convert a raw stream into a BililiveStream without performing websocket protocol establishment.
+    /// Convert a raw stream into a [`BililiveStream`](BililiveStream) without performing websocket protocol establishment.
     ///
     /// You may want to use `connect` or `connect_with_retry` in [`connect`](crate::connect) module instead.
     pub fn from_raw_stream(stream: T) -> Self {

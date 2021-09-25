@@ -102,6 +102,7 @@ impl BEBIterator {
     /// # Panics
     ///
     /// Truncate is expected to less than fail. Otherwise, a panic will occur.
+    #[must_use]
     pub fn new(unit: Duration, truncate: u32, fail: u32) -> Self {
         assert!(truncate < fail, "truncate >= fail");
         Self {

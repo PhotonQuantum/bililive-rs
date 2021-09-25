@@ -55,6 +55,7 @@ pub enum HTTPError {
 #[allow(unreachable_patterns)]
 impl HTTPError {
     /// Get the inner error.
+    #[must_use]
     pub fn inner(self) -> http_client::Error {
         match self {
             HTTPError::HTTPClient(e) => e,
@@ -63,6 +64,7 @@ impl HTTPError {
     }
 
     /// Get a reference to the inner error.
+    #[must_use]
     pub fn inner_ref(&self) -> &http_client::Error {
         match self {
             HTTPError::HTTPClient(e) => e,
@@ -75,6 +77,7 @@ impl HTTPError {
 #[allow(unreachable_patterns)]
 impl HTTPError {
     /// Get the inner error.
+    #[must_use]
     pub fn inner(self) -> reqwest::Error {
         match self {
             HTTPError::Reqwest(e) => e,
@@ -83,6 +86,7 @@ impl HTTPError {
     }
 
     /// Get a reference to the inner error.
+    #[must_use]
     pub fn inner_ref(&self) -> &reqwest::Error {
         match self {
             HTTPError::Reqwest(e) => e,

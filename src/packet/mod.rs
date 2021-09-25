@@ -20,7 +20,7 @@ mod types;
 #[cfg(test)]
 mod tests;
 
-/// Bililive packet
+/// Bililive packet.
 ///
 /// Packet can be used to encode/parse raw bilibili live packets, and extract information from it.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -58,7 +58,7 @@ impl Packet {
     /// Construct a new packet.
     ///
     /// To construct a zlib-compressed packet, you should create a JSON/Int32BE packet first,
-    /// then call [Packet::compress] to convert it to a zlib one.
+    /// then call [`Packet::compress`](Packet::compress) to convert it to a zlib one.
     pub fn new<T: Into<Vec<u8>>>(op: Operation, protocol_version: Protocol, data: T) -> Self {
         let data = data.into();
 
@@ -73,6 +73,9 @@ impl Packet {
     }
 
     /// Convert a JSON/Int32BE packet to a zlib-compressed one.
+    ///
+    /// # Errors
+    /// Return errors if compression fails.
     pub fn compress(self) -> Result<Self> {
         let raw = self.encode();
 
@@ -111,17 +114,19 @@ impl Packet {
     }
     /// Try to parse the body by json.
     ///
+    /// # Errors
     /// It may fail if the model is incorrect or it's not a json packet.
-    /// You may check the type of the packet by [Packet::proto].
-    /// Normally you won't get [Protocol::Zlib] packets because they are handled by BililiveStream and decompressed transparently.
+    /// You may check the type of the packet by [`Packet::proto`](Packet::proto).
+    /// Normally you won't get [`Protocol::Zlib`](Protocol::Zlib) packets because they are handled by [`BililiveStream`](crate::BililiveStream) and decompressed transparently.
     pub fn json<'a, T: Deserialize<'a>>(&'a self) -> Result<T> {
         serde_json::from_slice(&self.data).map_err(|e| ParseError::JSON(e).into())
     }
     /// Try to parse the body by big endian int32.
     ///
+    /// # Errors
     /// It may fail if it's not a int packet.
-    /// You may check the type of the packet by [Packet::proto].
-    /// Normally you won't get [Protocol::Zlib] packets because they are handled by BililiveStream and decompressed transparently.
+    /// You may check the type of the packet by [`Packet::proto`](Packet::proto).
+    /// Normally you won't get [`Protocol::Zlib`](Protocol::Zlib) packets because they are handled by [`BililiveStream`](crate::BililiveStream) and decompressed transparently.
     pub fn int32_be(&self) -> Result<i32> {
         Ok(i32::from_be_bytes(
             self.data
@@ -134,7 +139,7 @@ impl Packet {
 
 impl Packet {
     /// Encode the packet into bytes ready to be sent to the server.
-    /// Normally you don't call this method because BililiveStream already handles this for you.
+    /// Normally you don't call this method because [`BililiveStream`](crate::BililiveStream) already handles this for you.
     pub fn encode(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(self.packet_length as usize);
         buf.extend(self.packet_length.to_be_bytes());
@@ -147,7 +152,7 @@ impl Packet {
     }
 
     /// Parse the packet received from Bilibili server.
-    /// Normally you don't call this function because BililiveStream already handles this for you.
+    /// Normally you don't call this function because [`BililiveStream`](crate::BililiveStream) already handles this for you.
     pub fn parse(input: &[u8]) -> IncompleteResult<(&[u8], Packet)> {
         match parser::parse(input) {
             Ok((input, packet)) => {

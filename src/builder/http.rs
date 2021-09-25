@@ -13,6 +13,7 @@ pub enum HTTPClient {
 }
 
 impl Default for HTTPClient {
+    #[allow(unreachable_code)]
     fn default() -> Self {
         #[cfg(feature = "reqwest")]
         return Self::Reqwest(reqwest::Client::new());
@@ -23,7 +24,7 @@ impl Default for HTTPClient {
 
 impl HTTPClient {
     #[cfg(feature = "h1-client")]
-    const fn get_h1(&self) -> &http_client::h1::H1Client {
+    fn get_h1(&self) -> &http_client::h1::H1Client {
         match self {
             #[cfg(feature = "h1-client")]
             HTTPClient::H1(c) => c,
@@ -33,7 +34,7 @@ impl HTTPClient {
     }
 
     #[cfg(feature = "reqwest")]
-    const fn get_reqwest(&self) -> &reqwest::Client {
+    fn get_reqwest(&self) -> &reqwest::Client {
         match self {
             #[cfg(feature = "h1-client")]
             HTTPClient::H1(_) => unreachable!(),
@@ -42,6 +43,7 @@ impl HTTPClient {
         }
     }
 
+    #[allow(unreachable_code)]
     pub(crate) async fn get_json<T: DeserializeOwned>(&self, url: &str) -> Result<T> {
         #[cfg(feature = "reqwest")]
         return Ok(serde_json::from_slice(

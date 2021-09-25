@@ -32,7 +32,7 @@ See `Crates Features` section for more.
 - Easy establishment of connection via given live room id.
 - Handles heartbeat packets automatically.
 - Auto retry when connection fails (optional).
-- Decompresses `ZLib` payloads automatically.
+- Decompresses `Zlib` payloads automatically.
 
 ## Example
 
