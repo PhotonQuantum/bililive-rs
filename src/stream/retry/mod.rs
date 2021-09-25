@@ -4,12 +4,24 @@ use std::sync::Arc;
 
 use crate::config::StreamConfig;
 
+#[macro_use]
+mod imp;
+
 #[cfg(feature = "tokio")]
-mod tokio;
+mod tokio {
+    //! `tokio` integration.
+    impl_retry!(tokio);
+}
 
 #[cfg(feature = "async-std")]
-mod async_std;
+mod async_std {
+    //! `async_std` integration.
+    impl_retry!(async_std);
+}
 
+/// Internal context for server picking during (re)connection.
+///
+/// Implements a round-robin policy for server selection.
 #[derive(Debug, Clone)]
 pub struct RetryContext {
     config: StreamConfig,
@@ -17,6 +29,7 @@ pub struct RetryContext {
 }
 
 impl RetryContext {
+    /// Get the next server.
     pub fn get(&mut self) -> &str {
         let cursor: usize = self
             .cursor
