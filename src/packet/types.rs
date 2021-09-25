@@ -2,6 +2,7 @@ use std::convert::TryFrom;
 
 use crate::errors::ParseError;
 
+/// Live event types.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(u32)]
 pub enum Operation {
@@ -26,6 +27,9 @@ impl From<u32> for Operation {
     }
 }
 
+/// Protocol types.
+///
+/// Indicating the format of packet content.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(u16)]
 pub enum Protocol {
