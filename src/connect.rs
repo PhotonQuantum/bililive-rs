@@ -1,3 +1,4 @@
+//! Connection related functions and types.
 macro_rules! impl_connect_mod {
     ($adapter:ident) => {
         use async_tungstenite::tungstenite::{error::Error as WsError, Message};
@@ -45,13 +46,13 @@ macro_rules! impl_connect_mod {
     };
 }
 
-#[cfg(any(feature = "tokio", doc))]
+#[cfg(feature = "tokio")]
 pub mod tokio {
     //! `tokio` integration.
     impl_connect_mod!(tokio);
 }
 
-#[cfg(any(feature = "async-std", doc))]
+#[cfg(feature = "async-std")]
 pub mod async_std {
     //! `async_std` integration.
     impl_connect_mod!(async_std);
