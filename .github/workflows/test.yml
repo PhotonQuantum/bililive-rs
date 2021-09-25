@@ -71,3 +71,23 @@ jobs:
         with:
           command: test
           args: --no-default-features --features async-native-tls --workspace
+
+  doc_test:
+    name: Doc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout 🛎️
+      - uses: actions-rs/toolchain@v1
+        name: Setup Cargo Toolchain 🛎️
+        with:
+          components: rust-docs
+          profile: minimal
+          toolchain: stable
+          default: true
+      - uses: Swatinem/rust-cache@v1
+      - uses: actions-rs/cargo@v1
+        name: Running Tests 🚀
+        with:
+          command: rustdoc
+          args: --all-features
