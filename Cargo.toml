@@ -1,9 +1,22 @@
 [package]
 name = "bililive"
 version = "0.1.0"
+authors = ["LightQuantum <self@lightquantum.me>"]
 edition = "2018"
+description = "A simple stream-based bilibili live client library."
+license = "MIT"
+keywords = ["bilibili", "live", "stream", "client", "danmaku"]
+repository = "https://github.com/PhotonQuantum/bililive-rs"
+readme = "README.md"
+exclude = [
+    ".github/*",
+    ".gitignore",
+    ".mergify.yml",
+    "rust-toolchain.toml"
+]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[package.metadata.docs.rs]
+all-features = true
 
 [features]
 default = ["tokio-native-tls"]
