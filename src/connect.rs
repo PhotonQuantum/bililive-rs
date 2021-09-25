@@ -26,7 +26,7 @@ macro_rules! impl_connect_mod {
         /// Returns an error when websocket connection fails.
         pub async fn connect(config: StreamConfig) -> Result<DefaultStream> {
             let inner = InnerStream::establish(config.into()).await?;
-            Ok(BililiveStream::new(inner))
+            Ok(BililiveStream::from_raw_stream(inner))
         }
 
         /// Connect to bilibili live room with auto retry.
@@ -40,7 +40,7 @@ macro_rules! impl_connect_mod {
             let inner: InnerRetryStream =
                 ReconnectStream::connect_with_options(stream_config.into(), retry_config.into())
                     .await?;
-            Ok(BililiveStream::new(inner))
+            Ok(BililiveStream::from_raw_stream(inner))
         }
     };
 }

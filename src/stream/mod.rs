@@ -21,6 +21,11 @@ mod tests;
 
 type StreamResult<T> = std::result::Result<T, BililiveError>;
 
+/// A wrapper around an underlying websocket stream (w/o retry) which implements bilibili live protocol.
+///
+/// A `BililiveStream<T>` represents a stream that has finished basic handshake procedure, and exposes
+/// `Stream` and `Sink` interfaces. Heartbeats are automatically handled as long as the stream is
+/// polled frequently.
 pub struct BililiveStream<T> {
     // underlying websocket stream
     stream: T,
@@ -33,7 +38,10 @@ pub struct BililiveStream<T> {
 }
 
 impl<T> BililiveStream<T> {
-    pub fn new(stream: T) -> Self {
+    /// Convert a raw stream into a BililiveStream without performing websocket protocol establishment.
+    ///
+    /// You may want to use `connect` or `connect_with_retry` in [`connect`](crate::connect) module instead.
+    pub fn from_raw_stream(stream: T) -> Self {
         Self {
             stream,
             tx_waker: Arc::new(Default::default()),
