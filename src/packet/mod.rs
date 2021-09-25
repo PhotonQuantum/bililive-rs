@@ -1,3 +1,5 @@
+//! Packet types.
+
 use std::convert::TryInto;
 use std::io::{Cursor, Read, Write};
 
