@@ -1,4 +1,4 @@
-//! Bililive config builders
+//! `bililive` config builders.
 
 use crate::builder::http::HTTPClient;
 use crate::builder::types::{ConfQueryInner, Resp, RoomQueryInner};
@@ -10,7 +10,7 @@ mod http;
 pub(crate) mod tests;
 mod types;
 
-/// Bililive stream config builder
+/// `bililive` stream config builder
 ///
 /// Stream config can be built via given live room parameters (room id and user id) & danmaku server configs (server token and list).
 ///
