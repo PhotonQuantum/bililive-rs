@@ -84,14 +84,11 @@ where
 
             // Schedule current task to be waken in case there's no incoming
             // websocket message in a long time.
-            debug!("scheduling task awake");
             #[cfg(feature = "tokio")]
             {
                 let waker = cx.waker().clone();
                 tokio::spawn(async {
-                    debug!("awake task online");
                     tokio::time::sleep(Duration::from_secs(30)).await;
-                    debug!("waking read task");
                     waker.wake();
                 });
             }
@@ -99,9 +96,7 @@ where
             {
                 let waker = cx.waker().clone();
                 async_std::task::spawn(async {
-                    debug!("awake task online");
                     async_std::task::sleep(Duration::from_secs(30)).await;
-                    debug!("waking read task");
                     waker.wake();
                 });
             }
