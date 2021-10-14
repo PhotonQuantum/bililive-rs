@@ -14,10 +14,10 @@ async fn run() -> Result<()> {
         .fetch_conf()
         .await?
         .build()?;
-    info!("room_id: {}", config.room_id);
-    info!("uid: {}", config.uid);
-    info!("token: {}", config.token);
-    info!("servers: {:#?}", config.servers);
+    info!("room_id: {}", config.room_id());
+    info!("uid: {}", config.uid());
+    info!("token: {}", config.token());
+    info!("servers: {:#?}", config.servers());
 
     #[cfg(feature = "tokio")]
     let mut stream =
