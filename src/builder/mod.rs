@@ -105,19 +105,15 @@ impl ConfigBuilder {
     /// # Errors
     /// Returns an error when there's field missing.
     pub fn build(self) -> Result<StreamConfig> {
-        Ok(StreamConfig {
-            room_id: self
-                .room_id
+        Ok(StreamConfig::new(
+            self.room_id
                 .ok_or_else(|| BililiveError::Build(String::from("room_id")))?,
-            uid: self
-                .uid
+            self.uid
                 .ok_or_else(|| BililiveError::Build(String::from("uid")))?,
-            token: self
-                .token
+            self.token
                 .ok_or_else(|| BililiveError::Build(String::from("token")))?,
-            servers: self
-                .servers
+            self.servers
                 .ok_or_else(|| BililiveError::Build(String::from("servers")))?,
-        })
+        ))
     }
 }

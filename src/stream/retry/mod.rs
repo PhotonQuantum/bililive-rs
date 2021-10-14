@@ -34,10 +34,10 @@ impl RetryContext {
         let cursor: usize = self
             .cursor
             .fetch_update(SeqCst, SeqCst, |i| {
-                Some((i + 1) % self.config.servers.len())
+                Some((i + 1) % self.config.servers().len())
             })
             .unwrap();
-        &*self.config.servers[cursor]
+        &*self.config.servers()[cursor]
     }
 }
 
