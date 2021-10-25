@@ -1,0 +1,52 @@
+[package]
+name = "bililive"
+version = "0.1.1"
+authors = ["LightQuantum <self@lightquantum.me>"]
+edition = "2018"
+description = "A simple stream-based bilibili live client library."
+license = "MIT"
+keywords = ["bilibili", "live", "stream", "client", "danmaku"]
+repository = "https://github.com/PhotonQuantum/bililive-rs"
+readme = "README.md"
+exclude = [
+    ".github/*",
+    ".gitignore",
+    ".mergify.yml",
+    "rust-toolchain.toml"
+]
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+default = ["tokio-native-tls"]
+tokio-native-tls = ["tokio", "async-tungstenite/tokio-native-tls", "reqwest/native-tls", "stream-reconnect/tokio"]
+tokio-rustls-webpki-roots = ["tokio", "async-tungstenite/tokio-rustls-webpki-roots", "reqwest/rustls-tls-webpki-roots", "stream-reconnect/tokio"]
+tokio-rustls-native-certs = ["tokio", "async-tungstenite/tokio-rustls-native-certs", "reqwest/rustls-tls-native-roots", "stream-reconnect/tokio"]
+async-native-tls = ["async-std", "async-tungstenite/async-native-tls", "h1-client", "http-client/native-tls", "stream-reconnect/async-std"]
+h1-client = ["http-client/h1_client"]
+
+[dependencies]
+tokio = { version = "1.12", optional = true }
+async-std = { version = "1.10", optional = true }
+async-tungstenite = { version = "0.15", default-features = false }
+bililive-core = { path = "../bililive-core" }
+http-client = { version = "6.5", default-features = false, optional = true }
+reqwest = { version = "0.11", default-features = false, optional = true }
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+url = { version = "2.2", features = ["serde"] }
+nom = "7.0"
+futures = "0.3"
+flate2 = "1.0"
+rand = "0.8"
+log = "0.4"
+stream-reconnect = { version = "0.3", default-features = false }
+
+[dev-dependencies]
+anyhow = "1.0"
+pretty_env_logger = "0.4"
+tokio = { version = "1.12", features = ["macros", "rt-multi-thread"] }
+tokio-test = "0.4"
+async-std = { version = "1.10", features = ["attributes"] }
