@@ -64,6 +64,21 @@ async fn test_stream(
     stream.close().await.expect("unable to close stream");
 }
 
+async fn test_stream_heartbeat(
+    mut stream: impl Stream<Item = Result<Packet, BililiveError>>
+        + Sink<Packet, Error = BililiveError>
+        + Unpin,
+) {
+    let stream_try = async {
+        while let Some(Ok(_)) = stream.next().await {}
+        panic!("connection closed (heartbeat not sent)");
+    };
+    // err means timeout indicating there's no early stop on stream
+    must_future_timeout!(120, stream_try);
+
+    stream.close().await.expect("unable to close stream");
+}
+
 #[cfg(feature = "tokio")]
 #[tokio::test(flavor = "multi_thread", worker_threads = 6)]
 async fn must_stream_tokio() {
@@ -106,4 +121,34 @@ async fn must_retry_async_std() {
         .await
         .expect("unable to establish connection");
     test_stream(stream).await;
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test(flavor = "multi_thread", worker_threads = 6)]
+async fn must_hb_tokio() {
+    if option_env!("FAST_TEST").is_some() {
+        return;
+    }
+
+    let config = build_real_config(true).await;
+
+    let stream = crate::connect::tokio::connect(config)
+        .await
+        .expect("unable to establish connection");
+    test_stream_heartbeat(stream).await;
+}
+
+#[cfg(feature = "async-std")]
+#[async_std::test]
+async fn must_hb_async_std() {
+    if option_env!("FAST_TEST").is_some() {
+        return;
+    }
+
+    let config = build_real_config(true).await;
+
+    let stream = crate::connect::async_std::connect(config)
+        .await
+        .expect("unable to establish connection");
+    test_stream_heartbeat(stream).await;
 }
