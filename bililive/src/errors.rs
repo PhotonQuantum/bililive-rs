@@ -1,39 +1,20 @@
 //! Error types.
 use std::fmt::{Debug, Display, Formatter};
 
-use nom::Needed;
 use thiserror::Error;
+use bililive_core::errors::Parse;
 
 /// The result type.
 pub type Result<T> = std::result::Result<T, BililiveError>;
 
-/// The result returned by parsing functions.
-///
-/// * `Ok` indicates a successful parse.
-/// * `Incomplete` means that more data is needed to complete the parsing.
-/// The `Needed` enum can contain how many additional bytes are necessary.
-/// * `Err` indicates an error.
-pub enum IncompleteResult<T> {
-    Ok(T),
-    Incomplete(Needed),
-    Err(BililiveError),
-}
-
-/// Errors that may occur when parsing a packet.
 #[derive(Debug, Error)]
-pub enum ParseError {
-    #[error("json error: {0}")]
-    JSON(#[from] serde_json::Error),
-    #[error("not a valid int32 big endian")]
-    Int32BE,
-    #[error("error when parsing room id")]
-    RoomId,
-    #[error("unknown websocket pack protocol")]
-    UnknownProtocol,
-    #[error("error when parsing packet struct")]
-    PacketError(String),
-    #[error("error when decompressing packet buffer: {0}")]
-    ZlibError(#[from] std::io::Error),
+pub enum Stream {
+    #[error("parse error: {0}")]
+    Parse(#[from] Parse),
+    #[error("io error: {0}")]
+    IO(#[from] std::io::Error),
+    #[error("ws error: {0}")]
+    WebSocket(#[from] async_tungstenite::tungstenite::Error)
 }
 
 /// A wrapper type for `reqwest::Error`(tokio) or `http_client::Error`(async-std).
@@ -126,8 +107,10 @@ impl Display for HTTPError {
 pub enum BililiveError {
     #[error("http error: {0}")]
     HTTP(HTTPError),
-    #[error("parse error: {0}")]
-    Parse(#[from] ParseError),
+    #[error("stream error: {0}")]
+    Stream(#[from] Stream),
+    #[error("parse: {0}")]
+    Parse(#[from] Parse),   // TODO remove this (ref at builder)
     #[error("io error: {0}")]
     IOError(#[from] std::io::Error),
     #[error("build error: missing field {0}")]

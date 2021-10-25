@@ -17,12 +17,12 @@ pub enum Operation {
 impl From<u32> for Operation {
     fn from(i: u32) -> Self {
         match i {
-            2 => Operation::HeartBeat,
-            3 => Operation::HeartBeatResponse,
-            5 => Operation::Notification,
-            7 => Operation::RoomEnter,
-            8 => Operation::RoomEnterResponse,
-            _ => Operation::Unknown,
+            2 => Self::HeartBeat,
+            3 => Self::HeartBeatResponse,
+            5 => Self::Notification,
+            7 => Self::RoomEnter,
+            8 => Self::RoomEnterResponse,
+            _ => Self::Unknown,
         }
     }
 }
@@ -43,9 +43,9 @@ impl TryFrom<u16> for Protocol {
 
     fn try_from(value: u16) -> Result<Self, Self::Error> {
         match value {
-            0 => Ok(Protocol::Json),
-            1 => Ok(Protocol::Int32BE),
-            2 => Ok(Protocol::Zlib),
+            0 => Ok(Self::Json),
+            1 => Ok(Self::Int32BE),
+            2 => Ok(Self::Zlib),
             _ => Err(ParseError::UnknownProtocol),
         }
     }

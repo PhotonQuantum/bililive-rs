@@ -3,7 +3,8 @@
 use crate::builder::http::HTTPClient;
 use crate::builder::types::{ConfQueryInner, Resp, RoomQueryInner};
 use crate::config::StreamConfig;
-use crate::errors::{BililiveError, ParseError, Result};
+use crate::errors::{BililiveError, Result};
+use bililive_core::errors::Parse as ParseError;
 
 mod http;
 #[cfg(test)]

@@ -2,7 +2,8 @@
 use http_client::HttpClient;
 use serde::de::DeserializeOwned;
 
-use crate::errors::{ParseError, Result};
+use crate::errors::Result;
+use bililive_core::errors::Parse as ParseError;
 
 #[derive(Debug)]
 pub enum HTTPClient {
@@ -49,14 +50,14 @@ impl HTTPClient {
         return Ok(serde_json::from_slice(
             &*self.get_reqwest().get(url).send().await?.bytes().await?,
         )
-        .map_err(ParseError::JSON)?);
+        .map_err(ParseError::Json)?);
         #[cfg(feature = "h1-client")]
         {
             let req = http_client::Request::get(url);
             return Ok(serde_json::from_slice(
                 &*self.get_h1().send(req).await?.body_bytes().await?,
             )
-            .map_err(ParseError::JSON)?);
+            .map_err(ParseError::Json)?);
         }
     }
 }

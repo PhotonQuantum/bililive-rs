@@ -75,6 +75,8 @@
 //! * `async-native-tls`: Enables `async_std` support with TLS implemented
 //! via [async-native-tls](https://crates.io/crates/async-native-tls).
 
+#![allow(clippy::default_trait_access)]
+
 #[doc(inline)]
 pub use crate::builder::ConfigBuilder;
 #[doc(inline)]
@@ -82,9 +84,9 @@ pub use crate::config::{RetryConfig, StreamConfig};
 #[doc(inline)]
 pub use crate::errors::BililiveError;
 #[doc(inline)]
-pub use crate::packet::{Operation, Packet, Protocol};
-#[doc(inline)]
 pub use crate::stream::BililiveStream;
+
+pub use bililive_core as core;
 
 #[macro_use]
 mod utils;
@@ -92,5 +94,4 @@ pub mod builder;
 pub mod config;
 pub mod connect;
 pub mod errors;
-pub mod packet;
 pub mod stream;

@@ -90,26 +90,32 @@ impl Packet {
 
 impl Packet {
     /// Get the packet length.
+    #[must_use]
     pub const fn packet_length(&self) -> u32 {
         self.packet_length
     }
     /// Get the header length.
+    #[must_use]
     pub const fn header_length(&self) -> u16 {
         self.header_length
     }
     /// Get the sequence id.
+    #[must_use]
     pub const fn seq_id(&self) -> u32 {
         self.seq_id
     }
     /// Get the operation.
+    #[must_use]
     pub const fn op(&self) -> Operation {
         self.op
     }
     /// Get the protocol version.
+    #[must_use]
     pub const fn proto(&self) -> Protocol {
         self.protocol_version
     }
     /// Get bytes of the body.
+    #[must_use]
     pub fn bytes(&self) -> &[u8] {
         &self.data
     }
@@ -141,6 +147,7 @@ impl Packet {
 impl Packet {
     /// Encode the packet into bytes ready to be sent to the server.
     /// Normally you don't call this method because [`BililiveStream`](crate::BililiveStream) already handles this for you.
+    #[must_use]
     pub fn encode(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(self.packet_length as usize);
         buf.extend(self.packet_length.to_be_bytes());
@@ -154,7 +161,8 @@ impl Packet {
 
     /// Parse the packet received from Bilibili server.
     /// Normally you don't call this function because [`BililiveStream`](crate::BililiveStream) already handles this for you.
-    pub fn parse(input: &[u8]) -> IncompleteResult<(&[u8], Packet)> {
+    #[must_use]
+    pub fn parse(input: &[u8]) -> IncompleteResult<(&[u8], Self)> {
         match parser::parse(input) {
             Ok((input, packet)) => {
                 if let Protocol::Zlib = packet.protocol_version {

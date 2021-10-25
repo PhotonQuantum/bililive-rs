@@ -3,7 +3,9 @@ use std::time::Duration;
 use futures::{Sink, SinkExt, Stream, StreamExt};
 
 use crate::builder::tests::build_real_config;
-use crate::{BililiveError, Operation, Packet, Protocol, RetryConfig};
+use crate::config::RetryConfig;
+use crate::core::packet::{Operation, Packet, Protocol};
+use crate::errors::Stream as StreamError;
 
 macro_rules! must_future_timeout {
     ($secs: literal, $future: expr) => {{
@@ -29,9 +31,9 @@ macro_rules! must_future_timeout {
 }
 
 async fn test_stream(
-    mut stream: impl Stream<Item = Result<Packet, BililiveError>>
-        + Sink<Packet, Error = BililiveError>
-        + Unpin,
+    mut stream: impl Stream<Item=Result<Packet, StreamError>>
+    + Sink<Packet, Error=StreamError>
+    + Unpin,
 ) {
     let mut msg_count = 0;
 
@@ -65,9 +67,9 @@ async fn test_stream(
 }
 
 async fn test_stream_heartbeat(
-    mut stream: impl Stream<Item = Result<Packet, BililiveError>>
-        + Sink<Packet, Error = BililiveError>
-        + Unpin,
+    mut stream: impl Stream<Item=Result<Packet, StreamError>>
+    + Sink<Packet, Error=StreamError>
+    + Unpin,
 ) {
     let stream_try = async {
         while let Some(Ok(_)) = stream.next().await {}

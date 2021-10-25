@@ -2,8 +2,7 @@ use async_tungstenite::tungstenite::Message;
 use serde_json::json;
 
 use crate::config::StreamConfig;
-use crate::packet::{Operation, Protocol};
-use crate::Packet;
+use bililive_core::packet::{Operation, Protocol, Packet};
 
 pub fn room_enter_message(config: &StreamConfig) -> Message {
     Message::binary(

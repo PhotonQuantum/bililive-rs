@@ -8,8 +8,9 @@ use async_tungstenite::tungstenite::{error::Error as WsError, Message};
 use futures::{ready, Sink, Stream};
 use log::{debug, warn};
 
-use crate::errors::{BililiveError, IncompleteResult};
-use crate::packet::{Operation, Packet, Protocol};
+use crate::errors::Stream as StreamError;
+use bililive_core::errors::IncompleteResult;
+use bililive_core::packet::{Operation, Packet, Protocol};
 
 use self::waker::WakerProxy;
 
@@ -20,7 +21,7 @@ mod waker;
 #[cfg(test)]
 mod tests;
 
-type StreamResult<T> = std::result::Result<T, BililiveError>;
+type StreamResult<T> = std::result::Result<T, StreamError>;
 
 /// A wrapper around an underlying websocket stream (w/o retry) which implements bilibili live protocol.
 ///
@@ -129,7 +130,7 @@ where
                                 }
                                 IncompleteResult::Err(e) => {
                                     warn!("error occurred when parsing incoming packet");
-                                    return Poll::Ready(Some(Err(e)));
+                                    return Poll::Ready(Some(Err(e.into())));
                                 }
                             }
                         } else {
@@ -154,7 +155,7 @@ impl<T> Sink<Packet> for BililiveStream<T>
 where
     T: Sink<Message, Error = WsError> + Unpin,
 {
-    type Error = BililiveError;
+    type Error = StreamError;
 
     fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         // wake current task and stream task
