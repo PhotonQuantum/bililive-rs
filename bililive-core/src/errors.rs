@@ -1,5 +1,6 @@
 //! Error types.
-use std::fmt::Debug;
+use std::error::Error;
+use std::fmt::{Debug, Display, Formatter};
 
 use nom::Needed;
 use thiserror::Error;
@@ -32,4 +33,30 @@ pub enum Parse {
     PacketError(String),
     #[error("error when decompressing packet buffer: {0}")]
     ZlibError(#[from] std::io::Error),
+}
+
+// Errors that may occur when requesting through builder
+#[derive(Debug)]
+pub struct Build(pub(crate) Box<dyn std::error::Error + Send + Sync>);
+
+impl Display for Build {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.0, f)
+    }
+}
+
+impl Error for Build {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        self.0.source()
+    }
+
+    #[allow(deprecated)]
+    fn description(&self) -> &str {
+        self.0.description()
+    }
+
+    #[allow(deprecated)]
+    fn cause(&self) -> Option<&dyn Error> {
+        self.0.cause()
+    }
 }

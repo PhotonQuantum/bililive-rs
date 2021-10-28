@@ -343,6 +343,7 @@ version = "0.1.1"
 dependencies = [
  "anyhow",
  "async-std",
+ "async-trait",
  "async-tungstenite",
  "bililive-core",
  "futures",
@@ -364,11 +365,13 @@ dependencies = [
 name = "bililive-core"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "flate2",
  "nom 7.0.0",
  "serde",
  "serde_json",
  "thiserror",
+ "url",
 ]
 
 [[package]]

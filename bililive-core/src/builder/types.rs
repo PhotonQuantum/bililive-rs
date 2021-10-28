@@ -20,16 +20,16 @@ impl Resp<ConfQueryInner> {
 }
 
 impl Resp<RoomQueryInner> {
-    pub fn room_id(&self) -> Option<u64> {
+    pub fn room_id(&self) -> u64 {
         let url = &self.data.url;
-        if url.host_str()? != "live.bilibili.com" {
-            return None;
-        }
+        assert_eq!(url.host_str().unwrap(), "live.bilibili.com");
         url.path_segments()
             .into_iter()
             .flatten()
             .last()
-            .and_then(|id| id.parse().ok())
+            .unwrap()
+            .parse()
+            .unwrap()
     }
 }
 

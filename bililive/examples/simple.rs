@@ -13,7 +13,7 @@ async fn run() -> Result<()> {
         .await?
         .fetch_conf()
         .await?
-        .build()?;
+        .build();
     info!("room_id: {}", config.room_id());
     info!("uid: {}", config.uid());
     info!("token: {}", config.token());

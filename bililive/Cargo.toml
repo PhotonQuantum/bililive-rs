@@ -27,6 +27,7 @@ async-native-tls = ["async-std", "async-tungstenite/async-native-tls", "h1-clien
 h1-client = ["http-client/h1_client"]
 
 [dependencies]
+async-trait = "0.1"
 tokio = { version = "1.12", optional = true }
 async-std = { version = "1.10", optional = true }
 async-tungstenite = { version = "0.15", default-features = false }

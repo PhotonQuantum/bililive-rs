@@ -41,7 +41,7 @@
 //!     .await?
 //!     .fetch_conf()
 //!     .await?
-//!     .build()?;
+//!     .build();
 //!
 //! let mut stream = connect_with_retry(config, RetryConfig::default()).await?;
 //! while let Some(e) = stream.next().await {
@@ -88,8 +88,6 @@ pub use crate::errors::BililiveError;
 #[doc(inline)]
 pub use crate::stream::BililiveStream;
 
-#[macro_use]
-mod utils;
 pub mod builder;
 pub mod config;
 pub mod connect;

@@ -1,122 +1,48 @@
 //! `bililive` config builder.
+//!
+//! Stream config can be built via given live room parameters (room id and user id) & danmaku server configs (server token and list).
+//!
+//! # Helper methods
+//!
+//! [`by_uid`](ConfigBuilder::by_uid) fetches room id by given user id.
+//!
+//! [`fetch_conf`](ConfigBuilder::fetch_conf) fetches danmaku server token and list without any input parameter.
+//!
+//! # Example
+//!
+//! ```rust
+//! # use std::future::Future;
+//! #
+//! # use bililive::ConfigBuilder;
+//! # use bililive_core::errors::Build;
+//! #
+//! # let fut = async {
+//! # Ok::<_, Build>(
+//! ConfigBuilder::new()
+//!     .by_uid(1472906636)
+//!     .await?
+//!     .fetch_conf()
+//!     .await?
+//!     .build()
+//! # )
+//! # };
+//! #
+//! # tokio_test::block_on(fut).unwrap();
+//! ```
 
-use bililive_core::config::Stream as StreamConfig;
-use bililive_core::errors::Parse as ParseError;
-
-use crate::builder::http::HTTPClient;
-use crate::builder::types::{ConfQueryInner, Resp, RoomQueryInner};
-use crate::errors::{BililiveError, Result};
-
-mod http;
+#[cfg(feature = "h1-client")]
+mod h1;
+#[cfg(feature = "reqwest")]
+mod reqwest;
 #[cfg(test)]
 pub(crate) mod tests;
-mod types;
 
-/// `bililive` stream config builder.
-///
-/// Stream config can be built via given live room parameters (room id and user id) & danmaku server configs (server token and list).
-///
-/// # Helper methods
-///
-/// [`by_uid`](ConfigBuilder::by_uid) fetches room id by given user id.
-///
-/// [`fetch_conf`](ConfigBuilder::fetch_conf) fetches danmaku server token and list without any input parameter.
-///
-/// # Example
-///
-/// ```rust
-/// # use bililive::{ConfigBuilder, BililiveError};
-/// # use bililive_core::config::Stream as StreamConfig;
-/// #
-/// # let fut = async {
-/// ConfigBuilder::new()
-///     .by_uid(1472906636)
-///     .await?
-///     .fetch_conf()
-///     .await?
-///     .build()
-/// # };
-/// #
-/// # tokio_test::block_on(fut).unwrap();
-/// ```
-#[derive(Debug, Default)]
-pub struct ConfigBuilder {
-    http: HTTPClient,
-    room_id: Option<u64>,
-    uid: Option<u64>,
-    token: Option<String>,
-    servers: Option<Vec<String>>,
-}
+type BoxedError = Box<dyn std::error::Error + Send + Sync>;
 
-impl ConfigBuilder {
-    #[must_use]
-    pub fn new() -> Self {
-        Default::default()
-    }
+#[cfg(feature = "reqwest")]
+pub type ConfigBuilder<R, U, T, S> =
+    bililive_core::builder::Config<reqwest::ReqwestClient, R, U, T, S>;
 
-    setter_option_copy!(room_id, u64);
-    setter_option_copy!(uid, u64);
-
-    #[must_use]
-    pub fn token(mut self, token: &str) -> Self {
-        self.token = Some(token.to_string());
-        self
-    }
-
-    #[must_use]
-    pub fn servers(mut self, servers: &[String]) -> Self {
-        self.servers = Some(servers.to_vec());
-        self
-    }
-
-    /// Fills `room_id` and `uid` by given `uid`, fetching `room_id` automatically.
-    ///
-    /// # Errors
-    /// Returns an error when HTTP api request fails.
-    pub async fn by_uid(mut self, uid: u64) -> Result<Self> {
-        let resp: Resp<RoomQueryInner> = self
-            .http
-            .get_json(&*format!(
-                "https://api.live.bilibili.com/bili/living_v2/{}",
-                uid
-            ))
-            .await?;
-        let room_id = resp.room_id().ok_or(ParseError::RoomId)?;
-
-        self.room_id = Some(room_id);
-        self.uid = Some(uid);
-        Ok(self)
-    }
-
-    /// Fetches danmaku server configs & uris
-    ///
-    /// # Errors
-    /// Returns an error when HTTP api request fails.
-    pub async fn fetch_conf(mut self) -> Result<Self> {
-        let resp: Resp<ConfQueryInner> = self
-            .http
-            .get_json("https://api.live.bilibili.com/room/v1/Danmu/getConf")
-            .await?;
-
-        self.token = Some(resp.token().to_string());
-        self.servers = Some(resp.servers());
-        Ok(self)
-    }
-
-    /// Consumes the builder and returns [`StreamConfig`](StreamConfig)
-    ///
-    /// # Errors
-    /// Returns an error when there's field missing.
-    pub fn build(self) -> Result<StreamConfig> {
-        Ok(StreamConfig::new(
-            self.room_id
-                .ok_or_else(|| BililiveError::Build(String::from("room_id")))?,
-            self.uid
-                .ok_or_else(|| BililiveError::Build(String::from("uid")))?,
-            self.token
-                .ok_or_else(|| BililiveError::Build(String::from("token")))?,
-            self.servers
-                .ok_or_else(|| BililiveError::Build(String::from("servers")))?,
-        ))
-    }
-}
+#[cfg(feature = "h1-client")]
+#[cfg(not(feature = "reqwest"))]
+pub type ConfigBuilder<R, U, T, S> = bililive_core::builder::Config<h1::H1Client, R, U, T, S>;
