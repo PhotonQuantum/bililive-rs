@@ -31,9 +31,9 @@ macro_rules! must_future_timeout {
 }
 
 async fn test_stream(
-    mut stream: impl Stream<Item=Result<Packet, StreamError>>
-    + Sink<Packet, Error=StreamError>
-    + Unpin,
+    mut stream: impl Stream<Item = Result<Packet, StreamError>>
+        + Sink<Packet, Error = StreamError>
+        + Unpin,
 ) {
     let mut msg_count = 0;
 
@@ -67,9 +67,9 @@ async fn test_stream(
 }
 
 async fn test_stream_heartbeat(
-    mut stream: impl Stream<Item=Result<Packet, StreamError>>
-    + Sink<Packet, Error=StreamError>
-    + Unpin,
+    mut stream: impl Stream<Item = Result<Packet, StreamError>>
+        + Sink<Packet, Error = StreamError>
+        + Unpin,
 ) {
     let stream_try = async {
         while let Some(Ok(_)) = stream.next().await {}

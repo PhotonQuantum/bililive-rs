@@ -3,14 +3,16 @@
 use std::convert::TryInto;
 use std::io::{Cursor, Read, Write};
 
-use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
+use flate2::Compression;
 use nom::Err;
 use serde::Deserialize;
+use serde_json::json;
 
 pub use types::*;
 
+use crate::config::Stream;
 use crate::errors::{IncompleteResult, Parse as ParseError};
 
 mod parser;
@@ -85,6 +87,25 @@ impl Packet {
         let data = z.finish()?;
 
         Ok(Self::new(self.op, Protocol::Zlib, data))
+    }
+}
+
+impl Packet {
+    pub fn new_room_enter(config: &Stream) -> Self {
+        Packet::new(
+            Operation::RoomEnter,
+            Protocol::Json,
+            serde_json::to_vec(&json!({
+                "uid": config.uid(),
+                "roomid": config.room_id(),
+                "protover": 2,
+                "platform": "web",
+                "clientver": "1.8.2",
+                "type": 2,
+                "key": config.token()
+            }))
+            .unwrap(),
+        )
     }
 }
 
@@ -174,15 +195,15 @@ impl Packet {
 
                     match parser::parse(&buf) {
                         Ok((_, packet)) => IncompleteResult::Ok((input, packet)),
-                        Err(Err::Incomplete(needed)) => IncompleteResult::Err(
-                            ParseError::PacketError(format!(
+                        Err(Err::Incomplete(needed)) => {
+                            IncompleteResult::Err(ParseError::PacketError(format!(
                                 "incomplete buffer: {:?} needed",
                                 needed
-                            ))
-                        ),
-                        Err(Err::Error(e) | Err::Failure(e)) => IncompleteResult::Err(
-                            ParseError::PacketError(format!("{:?}", e)),
-                        ),
+                            )))
+                        }
+                        Err(Err::Error(e) | Err::Failure(e)) => {
+                            IncompleteResult::Err(ParseError::PacketError(format!("{:?}", e)))
+                        }
                     }
                 } else {
                     IncompleteResult::Ok((input, packet))

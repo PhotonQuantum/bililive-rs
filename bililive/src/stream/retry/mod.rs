@@ -2,7 +2,7 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 
-use crate::config::StreamConfig;
+use bililive_core::config::Stream as StreamConfig;
 
 #[macro_use]
 mod imp;

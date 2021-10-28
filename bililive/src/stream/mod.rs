@@ -8,14 +8,14 @@ use async_tungstenite::tungstenite::{error::Error as WsError, Message};
 use futures::{ready, Sink, Stream};
 use log::{debug, warn};
 
-use crate::errors::Stream as StreamError;
 use bililive_core::errors::IncompleteResult;
 use bililive_core::packet::{Operation, Packet, Protocol};
+
+use crate::errors::Stream as StreamError;
 
 use self::waker::WakerProxy;
 
 pub(crate) mod retry;
-mod utils;
 mod waker;
 
 #[cfg(test)]

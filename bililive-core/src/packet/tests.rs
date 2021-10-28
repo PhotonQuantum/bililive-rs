@@ -3,6 +3,7 @@ use std::fs::read;
 use serde_json::json;
 
 use crate::errors::IncompleteResult;
+
 use super::types::{Operation, Protocol};
 use super::Packet;
 

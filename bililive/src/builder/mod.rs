@@ -1,10 +1,11 @@
 //! `bililive` config builder.
 
+use bililive_core::config::Stream as StreamConfig;
+use bililive_core::errors::Parse as ParseError;
+
 use crate::builder::http::HTTPClient;
 use crate::builder::types::{ConfQueryInner, Resp, RoomQueryInner};
-use crate::config::StreamConfig;
 use crate::errors::{BililiveError, Result};
-use bililive_core::errors::Parse as ParseError;
 
 mod http;
 #[cfg(test)]
@@ -24,7 +25,8 @@ mod types;
 /// # Example
 ///
 /// ```rust
-/// # use bililive::{ConfigBuilder, BililiveError, StreamConfig};
+/// # use bililive::{ConfigBuilder, BililiveError};
+/// # use bililive_core::config::Stream as StreamConfig;
 /// #
 /// # let fut = async {
 /// ConfigBuilder::new()

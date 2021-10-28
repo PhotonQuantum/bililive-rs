@@ -1,4 +1,6 @@
-use crate::{ConfigBuilder, StreamConfig};
+use bililive_core::config::Stream as StreamConfig;
+
+use crate::ConfigBuilder;
 
 use super::types::{ConfQueryInner, Resp, RoomQueryInner};
 

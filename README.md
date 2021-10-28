@@ -18,7 +18,8 @@ bililive = "0.1"
 
 This crate supports both `tokio` and `async-std` runtime.
 
-`tokio` support is enabled by default. While used on an `async-std` runtime, change the corresponding dependency in Cargo.toml to
+`tokio` support is enabled by default. While used on an `async-std` runtime, change the corresponding dependency in
+Cargo.toml to
 
 ```
 bililive = { version = "0.1", default-features = false, features = ["async-native-tls"] }

@@ -4,9 +4,10 @@ macro_rules! impl_connect_mod {
         use async_tungstenite::tungstenite::{error::Error as WsError, Message};
         use async_tungstenite::$adapter::ConnectStream;
         use async_tungstenite::WebSocketStream;
+        use bililive_core::config::Stream as StreamConfig;
         use stream_reconnect::{ReconnectStream, UnderlyingStream};
 
-        use crate::config::{RetryConfig, StreamConfig};
+        use crate::config::RetryConfig;
         use crate::errors::Result;
         use crate::stream::retry::RetryContext;
         use crate::stream::BililiveStream;

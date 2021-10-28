@@ -1,5 +1,5 @@
 //! Error types.
-use std::fmt::{Debug};
+use std::fmt::Debug;
 
 use nom::Needed;
 use thiserror::Error;
@@ -24,7 +24,8 @@ pub enum Parse {
     #[error("not a valid int32 big endian")]
     Int32BE,
     #[error("error when parsing room id")]
-    RoomId, // TODO move this out (ref bililive::builder)
+    RoomId,
+    // TODO move this out (ref bililive::builder)
     #[error("unknown websocket pack protocol")]
     UnknownProtocol,
     #[error("error when parsing packet struct")]

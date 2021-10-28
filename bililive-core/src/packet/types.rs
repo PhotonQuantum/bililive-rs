@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use crate::errors::{Parse as ParseError};
+use crate::errors::Parse as ParseError;
 
 /// Live event types.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]

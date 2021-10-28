@@ -2,8 +2,9 @@
 use http_client::HttpClient;
 use serde::de::DeserializeOwned;
 
-use crate::errors::Result;
 use bililive_core::errors::Parse as ParseError;
+
+use crate::errors::Result;
 
 #[derive(Debug)]
 pub enum HTTPClient {

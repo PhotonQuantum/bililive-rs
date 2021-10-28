@@ -9,10 +9,9 @@ macro_rules! impl_retry {
         use async_tungstenite::tungstenite::Message;
         use async_tungstenite::$adapter::{connect_async, ConnectStream};
         use async_tungstenite::WebSocketStream;
+        use bililive_core::packet::Packet;
         use futures::SinkExt;
         use stream_reconnect::UnderlyingStream;
-
-        use crate::stream::utils::room_enter_message;
 
         use super::RetryContext;
 
@@ -25,7 +24,10 @@ macro_rules! impl_retry {
                 Box::pin(async move {
                     let server = ctor_arg.get();
                     let (mut ws, _) = connect_async(server).await?;
-                    ws.send(room_enter_message(&ctor_arg.config)).await?;
+                    ws.send(Message::binary(
+                        Packet::new_room_enter(&ctor_arg.config).encode(),
+                    ))
+                    .await?;
                     Ok(ws)
                 })
             }

@@ -6,9 +6,8 @@ use nom::number::streaming::{be_u16, be_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-use super::Packet;
-
 use super::types::{Operation, Protocol};
+use super::Packet;
 
 fn parse_proto(input: &[u8]) -> IResult<&[u8], Protocol> {
     map_res(be_u16, Protocol::try_from)(input)

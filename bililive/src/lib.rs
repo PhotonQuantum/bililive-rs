@@ -77,16 +77,16 @@
 
 #![allow(clippy::default_trait_access)]
 
+pub use bililive_core as core;
+
 #[doc(inline)]
 pub use crate::builder::ConfigBuilder;
 #[doc(inline)]
-pub use crate::config::{RetryConfig, StreamConfig};
+pub use crate::config::RetryConfig;
 #[doc(inline)]
 pub use crate::errors::BililiveError;
 #[doc(inline)]
 pub use crate::stream::BililiveStream;
-
-pub use bililive_core as core;
 
 #[macro_use]
 mod utils;

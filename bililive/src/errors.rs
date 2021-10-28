@@ -2,6 +2,7 @@
 use std::fmt::{Debug, Display, Formatter};
 
 use thiserror::Error;
+
 use bililive_core::errors::Parse;
 
 /// The result type.
@@ -14,7 +15,7 @@ pub enum Stream {
     #[error("io error: {0}")]
     IO(#[from] std::io::Error),
     #[error("ws error: {0}")]
-    WebSocket(#[from] async_tungstenite::tungstenite::Error)
+    WebSocket(#[from] async_tungstenite::tungstenite::Error),
 }
 
 /// A wrapper type for `reqwest::Error`(tokio) or `http_client::Error`(async-std).
@@ -110,7 +111,8 @@ pub enum BililiveError {
     #[error("stream error: {0}")]
     Stream(#[from] Stream),
     #[error("parse: {0}")]
-    Parse(#[from] Parse),   // TODO remove this (ref at builder)
+    Parse(#[from] Parse),
+    // TODO remove this (ref at builder)
     #[error("io error: {0}")]
     IOError(#[from] std::io::Error),
     #[error("build error: missing field {0}")]
