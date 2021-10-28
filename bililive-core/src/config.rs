@@ -3,6 +3,7 @@
 pub struct Stream(Box<StreamInner>);
 
 impl Stream {
+    #[must_use]
     pub fn new(room_id: u64, uid: u64, token: String, servers: Vec<String>) -> Self {
         Self(Box::new(StreamInner {
             room_id,
@@ -14,15 +15,19 @@ impl Stream {
 }
 
 impl Stream {
+    #[must_use]
     pub const fn room_id(&self) -> u64 {
         self.0.room_id
     }
+    #[must_use]
     pub const fn uid(&self) -> u64 {
         self.0.uid
     }
+    #[must_use]
     pub fn token(&self) -> &str {
         &self.0.token
     }
+    #[must_use]
     pub fn servers(&self) -> &[String] {
         &self.0.servers
     }

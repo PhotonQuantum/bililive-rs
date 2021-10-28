@@ -91,8 +91,10 @@ impl Packet {
 }
 
 impl Packet {
+    #[allow(clippy::missing_panics_doc)]
+    #[must_use]
     pub fn new_room_enter(config: &Stream) -> Self {
-        Packet::new(
+        Self::new(
             Operation::RoomEnter,
             Protocol::Json,
             serde_json::to_vec(&json!({
