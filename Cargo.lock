@@ -365,12 +365,16 @@ dependencies = [
 name = "bililive-core"
 version = "0.1.0"
 dependencies = [
+ "async-std",
  "async-trait",
  "flate2",
+ "futures",
+ "log",
  "nom 7.0.0",
  "serde",
  "serde_json",
  "thiserror",
+ "tokio",
  "url",
 ]
 

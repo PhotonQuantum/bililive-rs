@@ -3,13 +3,18 @@ name = "bililive-core"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["tokio"]
 
 [dependencies]
+async-std = { version = "1.10", optional = true }
+async-trait = "0.1"
+flate2 = "1.0"
+futures = "0.3"
+log = "0.4"
 nom = "7.0"
-thiserror = "1.0"
 serde = "1.0"
 serde_json = "1.0"
-flate2 = "1.0"
+thiserror = "1.0"
+tokio = { version = "1.12", optional = true }
 url = "2.2"
-async-trait = "0.1"

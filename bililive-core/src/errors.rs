@@ -60,3 +60,17 @@ impl Error for Build {
         self.0.cause()
     }
 }
+
+#[derive(Debug, Error)]
+pub enum Stream<E> {
+    #[error("parse error: {0}")]
+    Parse(#[from] Parse),
+    #[error("ws error: {0}")]
+    WebSocket(E),
+}
+
+impl<E> Stream<E> {
+    pub const fn from_ws_error(e: E) -> Self {
+        Self::WebSocket(e)
+    }
+}

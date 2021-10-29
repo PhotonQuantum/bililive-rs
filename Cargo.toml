@@ -1,2 +1,2 @@
 [workspace]
-members = ["bililive-core", "bililive", "actix-bililive"]
+members = ["actix-bililive", "bililive", "bililive-core"]

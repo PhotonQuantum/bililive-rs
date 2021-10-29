@@ -5,12 +5,13 @@ macro_rules! impl_connect_mod {
         use async_tungstenite::$adapter::ConnectStream;
         use async_tungstenite::WebSocketStream;
         use bililive_core::config::Stream as StreamConfig;
+        use bililive_core::stream::HeartbeatStream;
         use stream_reconnect::{ReconnectStream, UnderlyingStream};
 
         use crate::config::RetryConfig;
         use crate::errors::Result;
         use crate::stream::retry::RetryContext;
-        use crate::stream::BililiveStream;
+        use crate::stream::CodecStream;
 
         pub type InnerStream = WebSocketStream<ConnectStream>;
         pub type InnerRetryStream = ReconnectStream<
@@ -19,8 +20,8 @@ macro_rules! impl_connect_mod {
             std::result::Result<Message, WsError>,
             WsError,
         >;
-        pub type DefaultStream = BililiveStream<InnerStream>;
-        pub type RetryStream = BililiveStream<InnerRetryStream>;
+        pub type DefaultStream = HeartbeatStream<CodecStream<InnerStream>, WsError>;
+        pub type RetryStream = HeartbeatStream<CodecStream<InnerRetryStream>, WsError>;
 
         /// Connect to bilibili live room.
         ///
@@ -28,7 +29,7 @@ macro_rules! impl_connect_mod {
         /// Returns an error when websocket connection fails.
         pub async fn connect(config: StreamConfig) -> Result<DefaultStream> {
             let inner = InnerStream::establish(config.into()).await?;
-            Ok(BililiveStream::from_raw_stream(inner))
+            Ok(HeartbeatStream::new(CodecStream::new(inner)))
         }
 
         /// Connect to bilibili live room with auto retry.
@@ -42,7 +43,7 @@ macro_rules! impl_connect_mod {
             let inner: InnerRetryStream =
                 ReconnectStream::connect_with_options(stream_config.into(), retry_config.into())
                     .await?;
-            Ok(BililiveStream::from_raw_stream(inner))
+            Ok(HeartbeatStream::new(CodecStream::new(inner)))
         }
     };
 }
