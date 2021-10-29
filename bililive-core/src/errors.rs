@@ -24,9 +24,6 @@ pub enum Parse {
     Json(#[from] serde_json::Error),
     #[error("not a valid int32 big endian")]
     Int32BE,
-    #[error("error when parsing room id")]
-    RoomId,
-    // TODO move this out (ref bililive::builder)
     #[error("unknown websocket pack protocol")]
     UnknownProtocol,
     #[error("error when parsing packet struct")]
