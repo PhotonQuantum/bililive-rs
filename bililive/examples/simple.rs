@@ -1,18 +1,19 @@
-use anyhow::Result;
 use futures::StreamExt;
 use log::info;
 use serde_json::Value;
 
 use bililive::{ConfigBuilder, RetryConfig};
 
-async fn run() -> Result<()> {
+async fn run() {
     pretty_env_logger::init();
 
     let config = ConfigBuilder::new()
         .by_uid(1602085)
-        .await?
+        .await
+        .unwrap()
         .fetch_conf()
-        .await?
+        .await
+        .unwrap()
         .build();
     info!("room_id: {}", config.room_id());
     info!("uid: {}", config.uid());
@@ -43,11 +44,9 @@ async fn run() -> Result<()> {
             }
         }
     }
-
-    Ok(())
 }
 
-fn main() -> Result<()> {
+fn main() {
     #[cfg(feature = "tokio")]
     {
         let runtime = tokio::runtime::Builder::new_multi_thread()

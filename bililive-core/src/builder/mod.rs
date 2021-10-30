@@ -24,10 +24,10 @@ use crate::errors::Build as BuildError;
 mod tests;
 mod types;
 
-type BoxedError = Box<dyn std::error::Error + Send + Sync>;
+type BoxedError = Box<dyn std::error::Error>;
 
-#[async_trait]
-pub trait Requester: Send + Sync {
+#[async_trait(?Send)]
+pub trait Requester {
     async fn get_json<T: DeserializeOwned>(&self, url: &str) -> Result<T, BoxedError>;
 }
 

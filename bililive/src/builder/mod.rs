@@ -37,7 +37,7 @@ mod reqwest;
 #[cfg(test)]
 pub(crate) mod tests;
 
-type BoxedError = Box<dyn std::error::Error + Send + Sync>;
+type BoxedError = Box<dyn std::error::Error>;
 
 #[cfg(feature = "reqwest")]
 pub type ConfigBuilder<R, U, T, S> =

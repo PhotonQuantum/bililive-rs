@@ -34,7 +34,7 @@ pub enum Parse {
 
 // Errors that may occur when requesting through builder
 #[derive(Debug)]
-pub struct Build(pub(crate) Box<dyn std::error::Error + Send + Sync>);
+pub struct Build(pub(crate) Box<dyn std::error::Error>);
 
 impl Display for Build {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
