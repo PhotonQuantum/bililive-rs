@@ -27,7 +27,6 @@
 //! ```rust
 //! # #[cfg(feature = "tokio")]
 //! use bililive::connect::tokio::connect_with_retry;
-//! use bililive::errors::Result;
 //! use bililive::{ConfigBuilder, RetryConfig};
 //!
 //! use futures::StreamExt;
@@ -35,15 +34,16 @@
 //! use serde_json::Value;
 //!
 //! # #[cfg(feature = "tokio")]
-//! # async fn test() -> Result<()> {
+//! # async fn test() {
 //! let config = ConfigBuilder::new()
 //!     .by_uid(1602085)
-//!     .await?
+//!     .await
+//!     .unwrap()
 //!     .fetch_conf()
-//!     .await?
+//!     .unwrap()
 //!     .build();
 //!
-//! let mut stream = connect_with_retry(config, RetryConfig::default()).await?;
+//! let mut stream = connect_with_retry(config, RetryConfig::default()).await.unwrap();
 //! while let Some(e) = stream.next().await {
 //!     match e {
 //!         Ok(packet) => {
@@ -58,7 +58,6 @@
 //!     }
 //! }
 //! #
-//! # Ok(())
 //! # }
 //! ```
 //!
@@ -84,12 +83,9 @@ pub use crate::builder::ConfigBuilder;
 #[doc(inline)]
 pub use crate::config::RetryConfig;
 #[doc(inline)]
-pub use crate::errors::BililiveError;
-#[doc(inline)]
 pub use crate::stream::CodecStream;
 
 pub mod builder;
 pub mod config;
 pub mod connect;
-pub mod errors;
 pub mod stream;

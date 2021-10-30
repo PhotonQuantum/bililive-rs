@@ -9,7 +9,6 @@ macro_rules! impl_connect_mod {
         use stream_reconnect::{ReconnectStream, UnderlyingStream};
 
         use crate::config::RetryConfig;
-        use crate::errors::Result;
         use crate::stream::retry::RetryContext;
         use crate::stream::CodecStream;
 
@@ -27,7 +26,7 @@ macro_rules! impl_connect_mod {
         ///
         /// # Errors
         /// Returns an error when websocket connection fails.
-        pub async fn connect(config: StreamConfig) -> Result<DefaultStream> {
+        pub async fn connect(config: StreamConfig) -> Result<DefaultStream, WsError> {
             let inner = InnerStream::establish(config.into()).await?;
             Ok(HeartbeatStream::new(CodecStream::new(inner)))
         }
@@ -39,7 +38,7 @@ macro_rules! impl_connect_mod {
         pub async fn connect_with_retry(
             stream_config: StreamConfig,
             retry_config: RetryConfig,
-        ) -> Result<RetryStream> {
+        ) -> Result<RetryStream, WsError> {
             let inner: InnerRetryStream =
                 ReconnectStream::connect_with_options(stream_config.into(), retry_config.into())
                     .await?;
