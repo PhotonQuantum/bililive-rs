@@ -3,11 +3,10 @@ use std::time::Duration;
 use async_tungstenite::tungstenite::Error as WsError;
 use futures::{Sink, SinkExt, Stream, StreamExt};
 
-use crate::core::errors::Stream as StreamError;
-
 use crate::builder::tests::build_real_config;
-use crate::config::RetryConfig;
+use crate::core::errors::Stream as StreamError;
 use crate::core::packet::{Operation, Packet, Protocol};
+use crate::core::retry::config::RetryConfig;
 
 macro_rules! must_future_timeout {
     ($secs: literal, $future: expr) => {{

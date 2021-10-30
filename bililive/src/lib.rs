@@ -27,7 +27,8 @@
 //! ```rust
 //! # #[cfg(feature = "tokio")]
 //! use bililive::connect::tokio::connect_with_retry;
-//! use bililive::{ConfigBuilder, RetryConfig};
+//! use bililive::ConfigBuilder;
+//! use bililive::core::retry::config::RetryConfig;
 //!
 //! use futures::StreamExt;
 //! use log::info;
@@ -40,6 +41,7 @@
 //!     .await
 //!     .unwrap()
 //!     .fetch_conf()
+//!     .await
 //!     .unwrap()
 //!     .build();
 //!
@@ -81,11 +83,8 @@ pub use bililive_core as core;
 #[doc(inline)]
 pub use crate::builder::ConfigBuilder;
 #[doc(inline)]
-pub use crate::config::RetryConfig;
-#[doc(inline)]
 pub use crate::stream::CodecStream;
 
 pub mod builder;
-pub mod config;
 pub mod connect;
 pub mod stream;

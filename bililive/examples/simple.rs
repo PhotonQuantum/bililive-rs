@@ -2,7 +2,8 @@ use futures::StreamExt;
 use log::info;
 use serde_json::Value;
 
-use bililive::{ConfigBuilder, RetryConfig};
+use bililive::core::retry::config::RetryConfig;
+use bililive::ConfigBuilder;
 
 async fn run() {
     pretty_env_logger::init();

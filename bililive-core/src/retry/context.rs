@@ -2,22 +2,7 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 
-use crate::core::config::Stream as StreamConfig;
-
-#[macro_use]
-mod imp;
-
-#[cfg(feature = "tokio")]
-mod tokio {
-    //! `tokio` integration.
-    impl_retry!(tokio);
-}
-
-#[cfg(feature = "async-std")]
-mod async_std {
-    //! `async_std` integration.
-    impl_retry!(async_std);
-}
+use crate::config::Stream as StreamConfig;
 
 /// Internal context for server picking during (re)connection.
 ///
@@ -29,7 +14,15 @@ pub struct RetryContext {
 }
 
 impl RetryContext {
+    #[must_use]
+    pub const fn config(&self) -> &StreamConfig {
+        &self.config
+    }
+}
+
+impl RetryContext {
     /// Get the next server.
+    #[allow(clippy::missing_panics_doc)]
     pub fn get(&mut self) -> &str {
         let cursor: usize = self
             .cursor

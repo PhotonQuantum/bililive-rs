@@ -4,7 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["tokio"]
+default = ["tokio-support"]
+tokio-support = ["tokio", "stream-reconnect/tokio"]
+async-std-support = ["async-std", "stream-reconnect/async-std"]
 
 [dependencies]
 async-std = { version = "1.10", optional = true }
@@ -13,8 +15,10 @@ flate2 = "1.0"
 futures = "0.3"
 log = "0.4"
 nom = "7.0"
-serde = "1.0"
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"
-tokio = { version = "1.12", optional = true }
-url = "2.2"
+tokio = { version = "1.12", features = ["rt"], optional = true }
+url = { version = "2.2", features = ["serde"] }
+rand = "0.8"
+stream-reconnect = { git = "https://github.com/PhotonQuantum/stream-reconnect", default-features = false }

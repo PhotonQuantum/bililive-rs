@@ -539,8 +539,10 @@ dependencies = [
  "futures",
  "log",
  "nom 7.0.0",
+ "rand 0.8.4",
  "serde",
  "serde_json",
+ "stream-reconnect",
  "thiserror",
  "tokio",
  "url",
@@ -2271,9 +2273,8 @@ checksum = "213701ba3370744dcd1a12960caa4843b3d68b4d1c0a5d575e0d65b2ee9d16c0"
 
 [[package]]
 name = "stream-reconnect"
-version = "0.3.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9831f47a89f0d699b3a0c74ae7c48b30974ccca14a571f342a0eb41b6f7f2a56"
+version = "0.4.0"
+source = "git+https://github.com/PhotonQuantum/stream-reconnect#c2f87c3a87b56b34d7dbe0194dc21ef34e463ec0"
 dependencies = [
  "async-std",
  "futures",

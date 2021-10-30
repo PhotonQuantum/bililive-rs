@@ -9,4 +9,5 @@ pub mod builder;
 pub mod config;
 pub mod errors;
 pub mod packet;
+pub mod retry;
 pub mod stream;
