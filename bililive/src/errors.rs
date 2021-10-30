@@ -2,7 +2,7 @@
 use async_tungstenite::tungstenite::Error as WsError;
 use thiserror::Error;
 
-use bililive_core::errors::{Build as BuildError, Stream};
+use crate::core::errors::{Build as BuildError, Stream};
 
 /// The result type.
 pub type Result<T> = std::result::Result<T, BililiveError>;

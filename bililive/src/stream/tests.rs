@@ -3,7 +3,7 @@ use std::time::Duration;
 use async_tungstenite::tungstenite::Error as WsError;
 use futures::{Sink, SinkExt, Stream, StreamExt};
 
-use bililive_core::errors::Stream as StreamError;
+use crate::core::errors::Stream as StreamError;
 
 use crate::builder::tests::build_real_config;
 use crate::config::RetryConfig;

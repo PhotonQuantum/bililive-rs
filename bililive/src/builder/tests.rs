@@ -1,4 +1,4 @@
-use bililive_core::config::Stream as StreamConfig;
+use crate::core::config::Stream as StreamConfig;
 
 use super::ConfigBuilder;
 

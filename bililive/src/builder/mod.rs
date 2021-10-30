@@ -14,7 +14,7 @@
 //! # use std::future::Future;
 //! #
 //! # use bililive::ConfigBuilder;
-//! # use bililive_core::errors::Build;
+//! # use bililive::core::errors::Build;
 //! #
 //! # let fut = async {
 //! # Ok::<_, Build>(

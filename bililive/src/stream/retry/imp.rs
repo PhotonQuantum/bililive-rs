@@ -5,11 +5,11 @@ macro_rules! impl_retry {
         use std::io::ErrorKind;
         use std::pin::Pin;
 
+        use crate::core::packet::Packet;
         use async_tungstenite::tungstenite::error::{Error as WsError, Error};
         use async_tungstenite::tungstenite::Message;
         use async_tungstenite::$adapter::{connect_async, ConnectStream};
         use async_tungstenite::WebSocketStream;
-        use bililive_core::packet::Packet;
         use futures::SinkExt;
         use stream_reconnect::UnderlyingStream;
 

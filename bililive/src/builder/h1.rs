@@ -3,7 +3,7 @@ use http_client::h1::H1Client as Client;
 use http_client::HttpClient;
 use serde::de::DeserializeOwned;
 
-use bililive_core::builder::Requester;
+use crate::core::builder::Requester;
 
 use super::BoxedError;
 

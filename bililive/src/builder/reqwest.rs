@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use reqwest::Client;
 use serde::de::DeserializeOwned;
 
-use bililive_core::builder::Requester;
+use crate::core::builder::Requester;
 
 use super::BoxedError;
 

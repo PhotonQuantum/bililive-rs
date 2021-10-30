@@ -1,11 +1,11 @@
 //! Connection related functions and types.
 macro_rules! impl_connect_mod {
     ($adapter:ident) => {
+        use crate::core::config::Stream as StreamConfig;
+        use crate::core::stream::HeartbeatStream;
         use async_tungstenite::tungstenite::{error::Error as WsError, Message};
         use async_tungstenite::$adapter::ConnectStream;
         use async_tungstenite::WebSocketStream;
-        use bililive_core::config::Stream as StreamConfig;
-        use bililive_core::stream::HeartbeatStream;
         use stream_reconnect::{ReconnectStream, UnderlyingStream};
 
         use crate::config::RetryConfig;
