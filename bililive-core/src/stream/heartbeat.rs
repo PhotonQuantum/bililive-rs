@@ -89,10 +89,10 @@ where
                     waker.wake();
                 });
             }
-        }
 
-        // ensure that heartbeat is sent
-        ready!(self.as_mut().poll_flush(cx))?;
+            // ensure that heartbeat is sent
+            ready!(self.as_mut().poll_flush(cx))?;
+        }
 
         Pin::new(&mut self.stream).poll_next(cx)
     }
