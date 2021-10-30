@@ -1,9 +1,12 @@
 use bytes::Bytes;
 
+pub use codec::Codec;
+pub use pingpong::PingPongStream;
+
 use crate::core::packet::Packet;
 
-pub mod codec;
-pub mod pingpong;
+mod codec;
+mod pingpong;
 #[cfg(test)]
 mod tests;
 

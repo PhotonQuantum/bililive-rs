@@ -5,7 +5,7 @@ use awc::ws::{Frame, Message};
 use bytes::BytesMut;
 use log::{debug, warn};
 
-use crate::core::errors::{IncompleteResult, Stream};
+use crate::core::errors::{IncompleteResult, StreamError};
 use crate::core::packet::Packet;
 
 use super::PacketOrPing;
@@ -28,13 +28,13 @@ impl Codec {
 
 impl Decoder for Codec {
     type Item = PacketOrPing;
-    type Error = Stream<WsClientError>;
+    type Error = StreamError<WsClientError>;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
         let ws_frame = if let Some(frame) = self
             .ws_codec
             .decode(src)
-            .map_err(|e| Stream::from_ws_error(e.into()))?
+            .map_err(|e| StreamError::from_ws_error(e.into()))?
         {
             frame
         } else {
@@ -78,7 +78,7 @@ impl Decoder for Codec {
 }
 
 impl Encoder<PacketOrPing> for Codec {
-    type Error = Stream<WsClientError>;
+    type Error = StreamError<WsClientError>;
 
     fn encode(&mut self, item: PacketOrPing, dst: &mut BytesMut) -> Result<(), Self::Error> {
         let msg = match item {
@@ -87,6 +87,6 @@ impl Encoder<PacketOrPing> for Codec {
         };
         self.ws_codec
             .encode(msg, dst)
-            .map_err(|e| Stream::from_ws_error(e.into()))
+            .map_err(|e| StreamError::from_ws_error(e.into()))
     }
 }

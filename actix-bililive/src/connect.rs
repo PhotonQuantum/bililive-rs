@@ -5,17 +5,14 @@ use awc::http::Version;
 use awc::{BoxedSocket, Client};
 use stream_reconnect::{ReconnectStream, UnderlyingStream};
 
-use crate::core::config::Stream as StreamConfig;
-use crate::core::errors::Stream as StreamError;
+use crate::core::config::StreamConfig;
+use crate::core::errors::StreamError;
 use crate::core::packet::Packet;
-use crate::core::retry::config::RetryConfig;
-use crate::core::retry::context::RetryContext;
-use crate::core::retry::{WsStream, WsStreamTrait};
+use crate::core::retry::{RetryConfig, RetryContext, WsStream, WsStreamTrait};
 use crate::core::stream::HeartbeatStream;
-use crate::stream::codec::Codec;
-use crate::stream::pingpong::PingPong;
+use crate::stream::{Codec, PingPongStream};
 
-pub type InnerStream = PingPong<Framed<BoxedSocket, Codec>>;
+pub type InnerStream = PingPongStream<Framed<BoxedSocket, Codec>>;
 pub type DefaultStream = HeartbeatStream<InnerStream, WsClientError>;
 pub type RetryStream = ReconnectStream<
     WsStream<Connector, WsClientError>,
@@ -35,7 +32,7 @@ impl WsStreamTrait<WsClientError> for Connector {
             .finish();
         let (_, ws) = client.ws(url).connect().await?;
         let codec = ws.into_map_codec(Codec::new);
-        Ok(HeartbeatStream::new(PingPong::new(codec)))
+        Ok(HeartbeatStream::new(PingPongStream::new(codec)))
     }
 }
 

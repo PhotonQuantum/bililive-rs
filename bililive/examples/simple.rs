@@ -2,7 +2,7 @@ use futures::StreamExt;
 use log::info;
 use serde_json::Value;
 
-use bililive::core::retry::config::RetryConfig;
+use bililive::core::retry::RetryConfig;
 use bililive::ConfigBuilder;
 
 async fn run() {

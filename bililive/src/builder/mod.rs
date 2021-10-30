@@ -14,10 +14,10 @@
 //! # use std::future::Future;
 //! #
 //! # use bililive::ConfigBuilder;
-//! # use bililive::core::errors::Build;
+//! # use bililive::core::errors::BuildError;
 //! #
 //! # let fut = async {
-//! # Ok::<_, Build>(
+//! # Ok::<_, BuildError>(
 //! ConfigBuilder::new()
 //!     .by_uid(1472906636)
 //!     .await?
@@ -41,8 +41,9 @@ type BoxedError = Box<dyn std::error::Error>;
 
 #[cfg(feature = "reqwest")]
 pub type ConfigBuilder<R, U, T, S> =
-    bililive_core::builder::Config<reqwest::ReqwestClient, R, U, T, S>;
+    bililive_core::builder::ConfigBuilder<reqwest::ReqwestClient, R, U, T, S>;
 
 #[cfg(feature = "h1-client")]
 #[cfg(not(feature = "reqwest"))]
-pub type ConfigBuilder<R, U, T, S> = bililive_core::builder::Config<h1::H1Client, R, U, T, S>;
+pub type ConfigBuilder<R, U, T, S> =
+    bililive_core::builder::ConfigBuilder<h1::H1Client, R, U, T, S>;

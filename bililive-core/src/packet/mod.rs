@@ -12,8 +12,8 @@ use serde_json::json;
 
 pub use types::*;
 
-use crate::config::Stream;
-use crate::errors::{IncompleteResult, Parse as ParseError};
+use crate::config::StreamConfig;
+use crate::errors::{IncompleteResult, ParseError};
 
 mod parser;
 mod types;
@@ -93,7 +93,7 @@ impl Packet {
 impl Packet {
     #[allow(clippy::missing_panics_doc)]
     #[must_use]
-    pub fn new_room_enter(config: &Stream) -> Self {
+    pub fn new_room_enter(config: &StreamConfig) -> Self {
         Self::new(
             Operation::RoomEnter,
             Protocol::Json,
@@ -147,7 +147,6 @@ impl Packet {
     /// # Errors
     /// It may fail if the model is incorrect or it's not a json packet.
     /// You may check the type of the packet by [`Packet::proto`](Packet::proto).
-    /// Normally you won't get [`Protocol::Zlib`](Protocol::Zlib) packets because they are handled by [`BililiveStream`](crate::BililiveStream) and decompressed transparently.
     pub fn json<'a, T: Deserialize<'a>>(&'a self) -> Result<T> {
         serde_json::from_slice(&self.data).map_err(ParseError::Json)
     }
@@ -156,7 +155,6 @@ impl Packet {
     /// # Errors
     /// It may fail if it's not a int packet.
     /// You may check the type of the packet by [`Packet::proto`](Packet::proto).
-    /// Normally you won't get [`Protocol::Zlib`](Protocol::Zlib) packets because they are handled by [`BililiveStream`](crate::BililiveStream) and decompressed transparently.
     pub fn int32_be(&self) -> Result<i32> {
         Ok(i32::from_be_bytes(
             self.data
@@ -169,7 +167,6 @@ impl Packet {
 
 impl Packet {
     /// Encode the packet into bytes ready to be sent to the server.
-    /// Normally you don't call this method because [`BililiveStream`](crate::BililiveStream) already handles this for you.
     #[must_use]
     pub fn encode(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(self.packet_length as usize);
@@ -183,7 +180,6 @@ impl Packet {
     }
 
     /// Parse the packet received from Bilibili server.
-    /// Normally you don't call this function because [`BililiveStream`](crate::BililiveStream) already handles this for you.
     #[must_use]
     pub fn parse(input: &[u8]) -> IncompleteResult<(&[u8], Self)> {
         match parser::parse(input) {

@@ -1,3 +1,5 @@
+//! Traits and types used by retry mechanism.
+
 use std::future::Future;
 use std::io;
 use std::io::ErrorKind;
@@ -9,36 +11,58 @@ use futures::SinkExt;
 use futures::{Sink, Stream};
 use stream_reconnect::UnderlyingStream;
 
-use context::RetryContext;
+pub use config::RetryConfig;
+pub use context::RetryContext;
+pub use policy::BEBIterator;
 
-use crate::errors::Stream as StreamError;
+use crate::errors::StreamError;
 use crate::packet::Packet;
 
-pub mod config;
-pub mod context;
-pub mod policy;
+mod config;
+mod context;
+mod policy;
 
+/// Trait of helper objects to connect bilibili websocket server.
+///
+/// This trait is used when constructing normal bililive streams or auto-retry bililive streams.
+///
+/// An implementation of `WsStreamTrait` takes in a ws server url and decodes the data into a stream
+/// of [`Packet`](crate::packet::Packet) with heartbeat auto-response mechanism implemented
+/// (see [`HeartbeatStream`](crate::stream::HeartbeatStream) for details).
 #[cfg(feature = "not-send")]
-#[async_trait(?Send)]
+#[async_trait(? Send)]
 pub trait WsStreamTrait<E> {
+    /// The returned stream type.
     type Stream: Stream<Item = Result<Packet, StreamError<E>>>
         + Sink<Packet, Error = StreamError<E>>
         + Unpin
         + Sized;
+    /// Connect to bilibili websocket server.
+    ///
+    /// # Errors
+    /// Returns an error when websocket connection fails.
     async fn connect(url: &str) -> Result<Self::Stream, E>;
 }
 
 #[cfg(not(feature = "not-send"))]
 #[async_trait]
 pub trait WsStreamTrait<E> {
+    /// The returned stream type.
     type Stream: Stream<Item = Result<Packet, StreamError<E>>>
         + Sink<Packet, Error = StreamError<E>>
         + Unpin
         + Sized
         + Send;
+    /// Connect to bilibili websocket server.
+    ///
+    /// # Errors
+    /// Returns an error when websocket connection fails.
     async fn connect(url: &str) -> Result<Self::Stream, E>;
 }
 
+/// Wrapper for types implementing `WsStreamTrait`.
+///
+/// This type is used to avoid the orphan rule. Exposed for stream type construction.
 #[derive(Debug, Default)]
 pub struct WsStream<T: WsStreamTrait<E>, E>(PhantomData<(T, E)>);
 
@@ -46,6 +70,8 @@ impl<T, E> WsStream<T, E>
 where
     T: WsStreamTrait<E>,
 {
+    /// Connect to bilibili websocket server.
+    ///
     /// # Errors
     /// Returns an error when websocket connection fails.
     pub async fn connect(url: &str) -> Result<T::Stream, E> {

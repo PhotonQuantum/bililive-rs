@@ -9,11 +9,17 @@ use futures::ready;
 use futures::{Sink, Stream};
 use log::debug;
 
-use crate::errors::Stream as StreamError;
+use crate::errors::StreamError;
 use crate::packet::{Operation, Packet, Protocol};
 
 use super::waker::WakerProxy;
 
+/// Wrapper that implement heartbeat auto-response mechanism on a [`Packet`](crate::packet::Packet) stream.
+///
+/// Bilibili server requires that every client must respond to a ping packet in 60 seconds. If no
+/// response is sent, the connection will be closed remotely.
+///
+/// `HeartbeatStream` ensures that a pong packet is sent every 30 seconds.
 pub struct HeartbeatStream<T, E> {
     /// underlying bilibili stream
     stream: T,
@@ -28,8 +34,6 @@ impl<T: Unpin, E> Unpin for HeartbeatStream<T, E> {}
 
 impl<T, E> HeartbeatStream<T, E> {
     /// Add heartbeat response mechanism to the underlying bililive stream.
-    ///
-    /// You may want to use `connect` or `connect_with_retry` in [`connect`](crate::connect) module instead.
     pub fn new(stream: T) -> Self {
         Self {
             stream,

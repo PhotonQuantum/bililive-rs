@@ -1,4 +1,4 @@
-use bililive_core::config::Stream as StreamConfig;
+use bililive_core::config::StreamConfig;
 
 use super::ConfigBuilder;
 

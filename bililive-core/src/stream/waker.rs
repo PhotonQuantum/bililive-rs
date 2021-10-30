@@ -1,3 +1,5 @@
+//! Helper waker proxy type.
+
 use std::sync::Arc;
 use std::task::{Wake, Waker};
 
@@ -15,9 +17,11 @@ pub struct WakerProxy {
 }
 
 impl WakerProxy {
+    /// Register the read waker.
     pub fn rx(&self, waker: &Waker) {
         self.rx_waker.register(waker);
     }
+    /// Register the write waker.
     pub fn tx(&self, waker: &Waker) {
         self.tx_waker.register(waker);
     }

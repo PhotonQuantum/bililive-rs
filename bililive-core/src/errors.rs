@@ -14,12 +14,12 @@ use thiserror::Error;
 pub enum IncompleteResult<T> {
     Ok(T),
     Incomplete(Needed),
-    Err(Parse),
+    Err(ParseError),
 }
 
 /// Errors that may occur when parsing a packet.
 #[derive(Debug, Error)]
-pub enum Parse {
+pub enum ParseError {
     #[error("json error: {0}")]
     Json(#[from] serde_json::Error),
     #[error("not a valid int32 big endian")]
@@ -32,17 +32,17 @@ pub enum Parse {
     ZlibError(#[from] std::io::Error),
 }
 
-// Errors that may occur when requesting through builder
+/// Errors that may occur when making HTTP requests through builder.
 #[derive(Debug)]
-pub struct Build(pub(crate) Box<dyn std::error::Error>);
+pub struct BuildError(pub(crate) Box<dyn std::error::Error>);
 
-impl Display for Build {
+impl Display for BuildError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         Display::fmt(&self.0, f)
     }
 }
 
-impl Error for Build {
+impl Error for BuildError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         self.0.source()
     }
@@ -58,17 +58,20 @@ impl Error for Build {
     }
 }
 
+/// Errors that may occur when consuming a stream.
+///
+/// `E` is determined by the underlying websocket implementation.
 #[derive(Debug, Error)]
-pub enum Stream<E> {
+pub enum StreamError<E> {
     #[error("parse error: {0}")]
-    Parse(#[from] Parse),
+    Parse(#[from] ParseError),
     #[error("ws error: {0}")]
     WebSocket(E),
     #[error("io error: {0}")]
     IO(#[from] std::io::Error),
 }
 
-impl<E> Stream<E> {
+impl<E> StreamError<E> {
     pub const fn from_ws_error(e: E) -> Self {
         Self::WebSocket(e)
     }

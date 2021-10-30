@@ -1,4 +1,4 @@
-use crate::core::config::Stream as StreamConfig;
+use crate::core::config::StreamConfig;
 
 use super::ConfigBuilder;
 

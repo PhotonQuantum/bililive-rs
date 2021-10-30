@@ -2,7 +2,7 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 
-use crate::config::Stream as StreamConfig;
+use crate::config::StreamConfig;
 
 /// Internal context for server picking during (re)connection.
 ///
@@ -14,13 +14,11 @@ pub struct RetryContext {
 }
 
 impl RetryContext {
+    /// Get the stream config.
     #[must_use]
     pub const fn config(&self) -> &StreamConfig {
         &self.config
     }
-}
-
-impl RetryContext {
     /// Get the next server.
     #[allow(clippy::missing_panics_doc)]
     pub fn get(&mut self) -> &str {

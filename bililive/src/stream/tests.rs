@@ -4,9 +4,9 @@ use async_tungstenite::tungstenite::Error as WsError;
 use futures::{Future, Sink, SinkExt, Stream, StreamExt};
 
 use crate::builder::tests::build_real_config;
-use crate::core::errors::Stream as StreamError;
+use crate::core::errors::StreamError;
 use crate::core::packet::{Operation, Packet, Protocol};
-use crate::core::retry::config::RetryConfig;
+use crate::core::retry::RetryConfig;
 
 async fn must_future_timeout(dur: Duration, fut: impl Future) {
     if cfg!(feature = "tokio") {

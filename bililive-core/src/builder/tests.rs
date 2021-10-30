@@ -1,4 +1,4 @@
-use crate::builder::Config as ConfigBuilder;
+use crate::builder::ConfigBuilder;
 
 use super::types::{ConfQueryInner, Resp, RoomQueryInner};
 

@@ -7,12 +7,10 @@ macro_rules! impl_connect_mod {
         use async_tungstenite::WebSocketStream;
         use stream_reconnect::{ReconnectStream, UnderlyingStream};
 
-        use crate::core::config::Stream as StreamConfig;
-        use crate::core::errors::Stream as StreamError;
+        use crate::core::config::StreamConfig;
+        use crate::core::errors::StreamError;
         use crate::core::packet::Packet;
-        use crate::core::retry::config::RetryConfig;
-        use crate::core::retry::context::RetryContext;
-        use crate::core::retry::{WsStream, WsStreamTrait};
+        use crate::core::retry::{RetryConfig, RetryContext, WsStream, WsStreamTrait};
         use crate::core::stream::HeartbeatStream;
         use crate::stream::CodecStream;
 

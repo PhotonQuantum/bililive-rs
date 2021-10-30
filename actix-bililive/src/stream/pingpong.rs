@@ -8,18 +8,18 @@ use futures::Stream;
 use futures::{ready, Sink};
 use log::debug;
 
-use crate::core::errors::Stream as StreamError;
+use crate::core::errors::StreamError;
 use crate::core::packet::Packet;
 use crate::core::stream::waker::WakerProxy;
 
 use super::PacketOrPing;
 
-pub struct PingPong<T> {
+pub struct PingPongStream<T> {
     stream: T,
     tx_waker: Arc<WakerProxy>,
 }
 
-impl<T> PingPong<T> {
+impl<T> PingPongStream<T> {
     pub fn new(stream: T) -> Self {
         Self {
             stream,
@@ -38,7 +38,7 @@ impl<T> PingPong<T> {
     }
 }
 
-impl<T> Stream for PingPong<T>
+impl<T> Stream for PingPongStream<T>
 where
     T: Stream<Item = Result<PacketOrPing, StreamError<WsClientError>>>
         + Sink<PacketOrPing, Error = StreamError<WsClientError>>
@@ -71,7 +71,7 @@ where
     }
 }
 
-impl<T> Sink<Packet> for PingPong<T>
+impl<T> Sink<Packet> for PingPongStream<T>
 where
     T: Sink<PacketOrPing, Error = StreamError<WsClientError>> + Unpin,
 {

@@ -8,7 +8,7 @@ use futures::{Sink, Stream};
 use log::{debug, warn};
 
 use crate::core::errors::IncompleteResult;
-use crate::core::errors::Stream as StreamError;
+use crate::core::errors::StreamError;
 use crate::core::packet::Packet;
 
 /// A stream/sink interface to underlying websocket frame stream. Encodes/decodes bilibili live packets.
