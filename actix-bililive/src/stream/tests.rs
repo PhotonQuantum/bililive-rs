@@ -1,6 +1,6 @@
 use std::time::Duration;
-use awc::error::WsProtocolError;
 
+use awc::error::WsClientError;
 use futures::{Future, Sink, SinkExt, Stream, StreamExt};
 
 use crate::builder::tests::build_real_config;
@@ -16,9 +16,9 @@ async fn must_future_timeout(dur: Duration, fut: impl Future) {
 }
 
 async fn test_stream(
-    mut stream: impl Stream<Item = Result<Packet, StreamError<WsProtocolError>>>
-    + Sink<Packet, Error = StreamError<WsProtocolError>>
-    + Unpin,
+    mut stream: impl Stream<Item = Result<Packet, StreamError<WsClientError>>>
+        + Sink<Packet, Error = StreamError<WsClientError>>
+        + Unpin,
 ) {
     let mut msg_count = 0;
 
@@ -52,9 +52,9 @@ async fn test_stream(
 }
 
 async fn test_stream_heartbeat(
-    mut stream: impl Stream<Item = Result<Packet, StreamError<WsProtocolError>>>
-    + Sink<Packet, Error = StreamError<WsProtocolError>>
-    + Unpin,
+    mut stream: impl Stream<Item = Result<Packet, StreamError<WsClientError>>>
+        + Sink<Packet, Error = StreamError<WsClientError>>
+        + Unpin,
 ) {
     let stream_try = async {
         while let Some(Ok(_)) = stream.next().await {}

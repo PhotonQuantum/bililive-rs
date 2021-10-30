@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::task::Waker;
 use std::task::{Context, Poll};
 
-use awc::error::WsProtocolError;
+use awc::error::WsClientError;
 use futures::Stream;
 use futures::{ready, Sink};
 use log::debug;
@@ -40,11 +40,11 @@ impl<T> PingPong<T> {
 
 impl<T> Stream for PingPong<T>
 where
-    T: Stream<Item = Result<PacketOrPing, StreamError<WsProtocolError>>>
-        + Sink<PacketOrPing, Error = StreamError<WsProtocolError>>
+    T: Stream<Item = Result<PacketOrPing, StreamError<WsClientError>>>
+        + Sink<PacketOrPing, Error = StreamError<WsClientError>>
         + Unpin,
 {
-    type Item = Result<Packet, StreamError<WsProtocolError>>;
+    type Item = Result<Packet, StreamError<WsClientError>>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         // register current task to be waken on poll_ready
@@ -73,9 +73,9 @@ where
 
 impl<T> Sink<Packet> for PingPong<T>
 where
-    T: Sink<PacketOrPing, Error = StreamError<WsProtocolError>> + Unpin,
+    T: Sink<PacketOrPing, Error = StreamError<WsClientError>> + Unpin,
 {
-    type Error = StreamError<WsProtocolError>;
+    type Error = StreamError<WsClientError>;
 
     fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         // wake current task and stream task

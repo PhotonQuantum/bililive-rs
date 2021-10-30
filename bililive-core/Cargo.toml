@@ -22,4 +22,4 @@ thiserror = "1.0"
 tokio = { version = "1.12", features = ["rt"], optional = true }
 url = { version = "2.2", features = ["serde"] }
 rand = "0.8"
-stream-reconnect = { git = "https://github.com/PhotonQuantum/stream-reconnect", default-features = false }
+stream-reconnect = { version = "0.4.0-beta.1", default-features = false }

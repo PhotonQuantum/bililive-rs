@@ -2274,8 +2274,9 @@ checksum = "213701ba3370744dcd1a12960caa4843b3d68b4d1c0a5d575e0d65b2ee9d16c0"
 
 [[package]]
 name = "stream-reconnect"
-version = "0.3.4"
-source = "git+https://github.com/PhotonQuantum/stream-reconnect#a76750b262d6172669f51dd9a04590765a8da8d9"
+version = "0.4.0-beta.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa0b4693e696374e4929166c8e2b5e7031a3be620ba359b0dbe1874a47664c9b"
 dependencies = [
  "async-std",
  "futures",

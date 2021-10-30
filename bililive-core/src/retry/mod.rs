@@ -32,10 +32,10 @@ pub trait WsStreamTrait<E> {
 #[async_trait]
 pub trait WsStreamTrait<E> {
     type Stream: Stream<Item = Result<Packet, StreamError<E>>>
-    + Sink<Packet, Error = StreamError<E>>
-    + Unpin
-    + Sized
-    + Send;
+        + Sink<Packet, Error = StreamError<E>>
+        + Unpin
+        + Sized
+        + Send;
     async fn connect(url: &str) -> Result<Self::Stream, E>;
 }
 

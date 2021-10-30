@@ -1,5 +1,5 @@
 use actix_codec::{Decoder, Encoder};
-use awc::error::WsProtocolError;
+use awc::error::WsClientError;
 use awc::ws::Codec as WsCodec;
 use awc::ws::{Frame, Message};
 use bytes::BytesMut;
@@ -19,21 +19,27 @@ pub struct Codec {
 impl Codec {
     #[must_use]
     pub const fn new(ws_codec: WsCodec) -> Self {
-        Self { ws_codec, read_buffer: vec![] }
+        Self {
+            ws_codec,
+            read_buffer: vec![],
+        }
     }
 }
 
 impl Decoder for Codec {
     type Item = PacketOrPing;
-    type Error = Stream<WsProtocolError>;
+    type Error = Stream<WsClientError>;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        let ws_frame =
-            if let Some(frame) = self.ws_codec.decode(src).map_err(Stream::from_ws_error)? {
-                frame
-            } else {
-                return Ok(None);
-            };
+        let ws_frame = if let Some(frame) = self
+            .ws_codec
+            .decode(src)
+            .map_err(|e| Stream::from_ws_error(e.into()))?
+        {
+            frame
+        } else {
+            return Ok(None);
+        };
 
         match ws_frame {
             Frame::Binary(bytes) => {
@@ -72,7 +78,7 @@ impl Decoder for Codec {
 }
 
 impl Encoder<PacketOrPing> for Codec {
-    type Error = Stream<WsProtocolError>;
+    type Error = Stream<WsClientError>;
 
     fn encode(&mut self, item: PacketOrPing, dst: &mut BytesMut) -> Result<(), Self::Error> {
         let msg = match item {
@@ -81,6 +87,6 @@ impl Encoder<PacketOrPing> for Codec {
         };
         self.ws_codec
             .encode(msg, dst)
-            .map_err(Stream::from_ws_error)
+            .map_err(|e| Stream::from_ws_error(e.into()))
     }
 }
