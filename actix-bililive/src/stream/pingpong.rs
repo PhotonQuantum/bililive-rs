@@ -26,6 +26,16 @@ impl<T> PingPong<T> {
             tx_waker: Arc::new(WakerProxy::default()),
         }
     }
+
+    fn with_context<F, U>(&mut self, f: F) -> U
+    where
+        F: FnOnce(&mut Context<'_>, &mut T) -> U,
+    {
+        let waker = Waker::from(self.tx_waker.clone());
+        let mut cx = Context::from_waker(&waker);
+
+        f(&mut cx, &mut self.stream)
+    }
 }
 
 impl<T> Stream for PingPong<T>
@@ -41,16 +51,16 @@ where
         self.tx_waker.rx(cx.waker());
 
         // ensure that all pending write op are completed
-        ready!(Sink::<PacketOrPing>::poll_ready(self.as_mut(), cx))?;
+        ready!(self.with_context(|cx, s| Pin::new(s).poll_ready(cx)))?;
 
         match ready!(Pin::new(&mut self.stream).poll_next(cx)) {
             Some(Ok(PacketOrPing::PingPong(bytes))) => {
                 // we need to send pong, so push it into the sink
                 debug!("sending pong");
-                self.as_mut().start_send(PacketOrPing::PingPong(bytes))?;
+                Pin::new(&mut self.stream).start_send(PacketOrPing::PingPong(bytes))?;
 
                 // ensure that pong is sent
-                let _ = Sink::<PacketOrPing>::poll_flush(self.as_mut(), cx)?;
+                let _ = self.with_context(|cx, s| Pin::new(s).poll_flush(cx))?;
 
                 Poll::Pending
             }
@@ -61,7 +71,7 @@ where
     }
 }
 
-impl<T> Sink<PacketOrPing> for PingPong<T>
+impl<T> Sink<Packet> for PingPong<T>
 where
     T: Sink<PacketOrPing, Error = StreamError<WsProtocolError>> + Unpin,
 {
@@ -70,57 +80,28 @@ where
     fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         // wake current task and stream task
         self.tx_waker.tx(cx.waker());
-        let waker = Waker::from(self.tx_waker.clone());
-        let mut cx = Context::from_waker(&waker);
 
         // poll the underlying websocket sink
-        Pin::new(&mut self.stream).poll_ready(&mut cx)
+        self.with_context(|cx, s| Pin::new(s).poll_ready(cx))
     }
 
-    fn start_send(mut self: Pin<&mut Self>, item: PacketOrPing) -> Result<(), Self::Error> {
-        Pin::new(&mut self.stream).start_send(item)
+    fn start_send(mut self: Pin<&mut Self>, item: Packet) -> Result<(), Self::Error> {
+        Pin::new(&mut self.stream).start_send(item.into())
     }
 
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         // wake current task and stream task
         self.tx_waker.tx(cx.waker());
-        let waker = Waker::from(self.tx_waker.clone());
-        let mut cx = Context::from_waker(&waker);
 
         // poll the underlying websocket sink
-        Pin::new(&mut self.stream).poll_flush(&mut cx)
+        self.with_context(|cx, s| Pin::new(s).poll_flush(cx))
     }
 
     fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         // wake current task and stream task
         self.tx_waker.tx(cx.waker());
-        let waker = Waker::from(self.tx_waker.clone());
-        let mut cx = Context::from_waker(&waker);
 
         // poll the underlying websocket sink
-        Pin::new(&mut self.stream).poll_close(&mut cx)
-    }
-}
-
-impl<T> Sink<Packet> for PingPong<T>
-where
-    Self: Sink<PacketOrPing, Error = StreamError<WsProtocolError>> + Unpin,
-{
-    type Error = StreamError<WsProtocolError>;
-
-    fn poll_ready(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Sink::<PacketOrPing>::poll_ready(self, cx)
-    }
-
-    fn start_send(self: Pin<&mut Self>, item: Packet) -> Result<(), Self::Error> {
-        Sink::<PacketOrPing>::start_send(self, item.into())
-    }
-
-    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Sink::<PacketOrPing>::poll_flush(self, cx)
-    }
-
-    fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Sink::<PacketOrPing>::poll_close(self, cx)
+        self.with_context(|cx, s| Pin::new(s).poll_close(cx))
     }
 }

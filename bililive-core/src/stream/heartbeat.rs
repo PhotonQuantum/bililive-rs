@@ -38,6 +38,16 @@ impl<T, E> HeartbeatStream<T, E> {
             __marker: PhantomData,
         }
     }
+
+    fn with_context<F, U>(&mut self, f: F) -> U
+    where
+        F: FnOnce(&mut Context<'_>, &mut T) -> U,
+    {
+        let waker = Waker::from(self.tx_waker.clone());
+        let mut cx = Context::from_waker(&waker);
+
+        f(&mut cx, &mut self.stream)
+    }
 }
 
 impl<T, E> Stream for HeartbeatStream<T, E>
@@ -52,7 +62,7 @@ where
         self.tx_waker.rx(cx.waker());
 
         // ensure that all pending write op are completed
-        ready!(self.as_mut().poll_ready(cx))?;
+        ready!(self.with_context(|cx, s| Pin::new(s).poll_ready(cx)))?;
 
         // check whether we need to send heartbeat now.
         let now = Instant::now();
@@ -91,7 +101,7 @@ where
             }
 
             // ensure that heartbeat is sent
-            ready!(self.as_mut().poll_flush(cx))?;
+            ready!(self.with_context(|cx, s| Pin::new(s).poll_flush(cx)))?;
         }
 
         Pin::new(&mut self.stream).poll_next(cx)
@@ -108,11 +118,9 @@ where
     fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         // wake current task and stream task
         self.tx_waker.tx(cx.waker());
-        let waker = Waker::from(self.tx_waker.clone());
-        let mut cx = Context::from_waker(&waker);
 
         // poll the underlying websocket sink
-        Pin::new(&mut self.stream).poll_ready(&mut cx)
+        self.with_context(|cx, s| Pin::new(s).poll_ready(cx))
     }
 
     fn start_send(mut self: Pin<&mut Self>, item: Packet) -> Result<(), Self::Error> {
@@ -122,20 +130,16 @@ where
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         // wake current task and stream task
         self.tx_waker.tx(cx.waker());
-        let waker = Waker::from(self.tx_waker.clone());
-        let mut cx = Context::from_waker(&waker);
 
         // poll the underlying websocket sink
-        Pin::new(&mut self.stream).poll_flush(&mut cx)
+        self.with_context(|cx, s| Pin::new(s).poll_flush(cx))
     }
 
     fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         // wake current task and stream task
         self.tx_waker.tx(cx.waker());
-        let waker = Waker::from(self.tx_waker.clone());
-        let mut cx = Context::from_waker(&waker);
 
         // poll the underlying websocket sink
-        Pin::new(&mut self.stream).poll_close(&mut cx)
+        self.with_context(|cx, s| Pin::new(s).poll_close(cx))
     }
 }
