@@ -11,6 +11,9 @@ dependencies = [
  "async-trait",
  "awc",
  "bililive-core",
+ "bytes",
+ "futures",
+ "log",
  "serde",
 ]
 

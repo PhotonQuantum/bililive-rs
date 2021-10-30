@@ -105,6 +105,7 @@ impl<H, R, U, T, S> Config<H, R, U, T, S> {
     }
 }
 
+#[allow(clippy::future_not_send)]
 impl<H, R, U, T, S> Config<H, R, U, T, S>
 where
     H: Requester,

@@ -64,6 +64,8 @@ pub enum Stream<E> {
     Parse(#[from] Parse),
     #[error("ws error: {0}")]
     WebSocket(E),
+    #[error("io error: {0}")]
+    IO(#[from] std::io::Error),
 }
 
 impl<E> Stream<E> {

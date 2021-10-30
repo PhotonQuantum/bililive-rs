@@ -1,4 +1,4 @@
 pub use heartbeat::HeartbeatStream;
 
 mod heartbeat;
-mod waker;
+pub mod waker;
