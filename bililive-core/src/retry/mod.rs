@@ -18,13 +18,24 @@ pub mod config;
 pub mod context;
 pub mod policy;
 
-#[async_trait]
+#[cfg(feature = "not-send")]
+#[async_trait(?Send)]
 pub trait WsStreamTrait<E> {
     type Stream: Stream<Item = Result<Packet, StreamError<E>>>
         + Sink<Packet, Error = StreamError<E>>
         + Unpin
-        + Sized
-        + Send;
+        + Sized;
+    async fn connect(url: &str) -> Result<Self::Stream, E>;
+}
+
+#[cfg(not(feature = "not-send"))]
+#[async_trait]
+pub trait WsStreamTrait<E> {
+    type Stream: Stream<Item = Result<Packet, StreamError<E>>>
+    + Sink<Packet, Error = StreamError<E>>
+    + Unpin
+    + Sized
+    + Send;
     async fn connect(url: &str) -> Result<Self::Stream, E>;
 }
 
@@ -35,11 +46,14 @@ impl<T, E> WsStream<T, E>
 where
     T: WsStreamTrait<E>,
 {
+    /// # Errors
+    /// Returns an error when websocket connection fails.
     pub async fn connect(url: &str) -> Result<T::Stream, E> {
         T::connect(url).await
     }
 }
 
+#[allow(clippy::type_complexity)]
 impl<T, E> UnderlyingStream<RetryContext, Result<Packet, StreamError<E>>, StreamError<E>>
     for WsStream<T, E>
 where
@@ -48,6 +62,21 @@ where
 {
     type Stream = T::Stream;
 
+    #[cfg(feature = "not-send")]
+    fn establish(
+        mut ctor_arg: RetryContext,
+    ) -> Pin<Box<dyn Future<Output = Result<Self::Stream, StreamError<E>>>>> {
+        Box::pin(async move {
+            let server = ctor_arg.get();
+            let mut ws = Self::connect(server)
+                .await
+                .map_err(StreamError::from_ws_error)?;
+            ws.send(Packet::new_room_enter(ctor_arg.config())).await?;
+            Ok(ws)
+        })
+    }
+
+    #[cfg(not(feature = "not-send"))]
     fn establish(
         mut ctor_arg: RetryContext,
     ) -> Pin<Box<dyn Future<Output = Result<Self::Stream, StreamError<E>>> + Send>> {

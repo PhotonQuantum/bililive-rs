@@ -16,6 +16,13 @@ pub struct Codec {
     read_buffer: Vec<u8>,
 }
 
+impl Codec {
+    #[must_use]
+    pub const fn new(ws_codec: WsCodec) -> Self {
+        Self { ws_codec, read_buffer: vec![] }
+    }
+}
+
 impl Decoder for Codec {
     type Item = PacketOrPing;
     type Error = Stream<WsProtocolError>;

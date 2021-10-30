@@ -7,6 +7,7 @@ edition = "2021"
 default = ["tokio-support"]
 tokio-support = ["tokio", "stream-reconnect/tokio"]
 async-std-support = ["async-std", "stream-reconnect/async-std"]
+not-send = ["stream-reconnect/not-send"]
 
 [dependencies]
 async-std = { version = "1.10", optional = true }

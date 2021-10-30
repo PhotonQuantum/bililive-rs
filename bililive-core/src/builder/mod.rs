@@ -26,8 +26,15 @@ mod types;
 
 type BoxedError = Box<dyn std::error::Error>;
 
+#[cfg(feature = "not-send")]
 #[async_trait(?Send)]
 pub trait Requester {
+    async fn get_json<T: DeserializeOwned>(&self, url: &str) -> Result<T, BoxedError>;
+}
+
+#[cfg(not(feature = "not-send"))]
+#[async_trait]
+pub trait Requester: Send + Sync {
     async fn get_json<T: DeserializeOwned>(&self, url: &str) -> Result<T, BoxedError>;
 }
 
@@ -105,7 +112,6 @@ impl<H, R, U, T, S> Config<H, R, U, T, S> {
     }
 }
 
-#[allow(clippy::future_not_send)]
 impl<H, R, U, T, S> Config<H, R, U, T, S>
 where
     H: Requester,

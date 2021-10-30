@@ -16,7 +16,7 @@ impl From<Client> for H1Client {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl Requester for H1Client {
     async fn get_json<T: DeserializeOwned>(&self, url: &str) -> Result<T, BoxedError> {
         let req = http_client::Request::get(url);

@@ -2,8 +2,10 @@ use bytes::Bytes;
 
 use crate::core::packet::Packet;
 
-mod codec;
-mod pingpong;
+pub mod codec;
+pub mod pingpong;
+#[cfg(test)]
+mod tests;
 
 #[derive(Debug)]
 pub enum PacketOrPing {

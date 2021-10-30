@@ -15,7 +15,7 @@ impl From<Client> for ReqwestClient {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl Requester for ReqwestClient {
     async fn get_json<T: DeserializeOwned>(&self, url: &str) -> Result<T, BoxedError> {
         Ok(serde_json::from_slice(

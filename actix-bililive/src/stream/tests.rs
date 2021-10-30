@@ -1,6 +1,6 @@
 use std::time::Duration;
+use awc::error::WsProtocolError;
 
-use async_tungstenite::tungstenite::Error as WsError;
 use futures::{Future, Sink, SinkExt, Stream, StreamExt};
 
 use crate::builder::tests::build_real_config;
@@ -9,25 +9,16 @@ use crate::core::packet::{Operation, Packet, Protocol};
 use crate::core::retry::config::RetryConfig;
 
 async fn must_future_timeout(dur: Duration, fut: impl Future) {
-    if cfg!(feature = "tokio") {
-        #[cfg(feature = "tokio")]
-        assert!(
-            tokio::time::timeout(dur, fut).await.is_err(),
-            "future not timeout"
-        );
-    } else {
-        #[cfg(feature = "async-std")]
-        assert!(
-            async_std::future::timeout(dur, fut).await.is_err(),
-            "future not timeout"
-        );
-    };
+    assert!(
+        actix_rt::time::timeout(dur, fut).await.is_err(),
+        "future not timeout"
+    );
 }
 
 async fn test_stream(
-    mut stream: impl Stream<Item = Result<Packet, StreamError<WsError>>>
-        + Sink<Packet, Error = StreamError<WsError>>
-        + Unpin,
+    mut stream: impl Stream<Item = Result<Packet, StreamError<WsProtocolError>>>
+    + Sink<Packet, Error = StreamError<WsProtocolError>>
+    + Unpin,
 ) {
     let mut msg_count = 0;
 
@@ -61,9 +52,9 @@ async fn test_stream(
 }
 
 async fn test_stream_heartbeat(
-    mut stream: impl Stream<Item = Result<Packet, StreamError<WsError>>>
-        + Sink<Packet, Error = StreamError<WsError>>
-        + Unpin,
+    mut stream: impl Stream<Item = Result<Packet, StreamError<WsProtocolError>>>
+    + Sink<Packet, Error = StreamError<WsProtocolError>>
+    + Unpin,
 ) {
     let stream_try = async {
         while let Some(Ok(_)) = stream.next().await {}
@@ -75,52 +66,27 @@ async fn test_stream_heartbeat(
     stream.close().await.expect("unable to close stream");
 }
 
-#[cfg(feature = "tokio")]
-#[tokio::test(flavor = "multi_thread", worker_threads = 6)]
+#[actix_rt::test]
 async fn must_stream_tokio() {
     let config = build_real_config(true).await;
 
-    let stream = crate::connect::tokio::connect(config)
+    let stream = crate::connect::connect(config)
         .await
         .expect("unable to establish connection");
     test_stream(stream).await;
 }
 
-#[cfg(feature = "tokio")]
-#[tokio::test(flavor = "multi_thread", worker_threads = 6)]
+#[actix_rt::test]
 async fn must_retry_stream_tokio() {
     let config = build_real_config(false).await;
 
-    let stream = crate::connect::tokio::connect_with_retry(config, RetryConfig::default())
+    let stream = crate::connect::connect_with_retry(config, RetryConfig::default())
         .await
         .expect("unable to establish connection");
     test_stream(stream).await;
 }
 
-#[cfg(feature = "async-std")]
-#[async_std::test]
-async fn must_stream_async_std() {
-    let config = build_real_config(true).await;
-
-    let stream = crate::connect::async_std::connect(config)
-        .await
-        .expect("unable to establish connection");
-    test_stream(stream).await;
-}
-
-#[cfg(feature = "async-std")]
-#[async_std::test]
-async fn must_retry_async_std() {
-    let config = build_real_config(false).await;
-
-    let stream = crate::connect::async_std::connect_with_retry(config, RetryConfig::default())
-        .await
-        .expect("unable to establish connection");
-    test_stream(stream).await;
-}
-
-#[cfg(feature = "tokio")]
-#[tokio::test(flavor = "multi_thread", worker_threads = 6)]
+#[actix_rt::test]
 async fn must_hb_tokio() {
     if option_env!("FAST_TEST").is_some() {
         return;
@@ -128,22 +94,7 @@ async fn must_hb_tokio() {
 
     let config = build_real_config(true).await;
 
-    let stream = crate::connect::tokio::connect(config)
-        .await
-        .expect("unable to establish connection");
-    test_stream_heartbeat(stream).await;
-}
-
-#[cfg(feature = "async-std")]
-#[async_std::test]
-async fn must_hb_async_std() {
-    if option_env!("FAST_TEST").is_some() {
-        return;
-    }
-
-    let config = build_real_config(true).await;
-
-    let stream = crate::connect::async_std::connect(config)
+    let stream = crate::connect::connect(config)
         .await
         .expect("unable to establish connection");
     test_stream_heartbeat(stream).await;
