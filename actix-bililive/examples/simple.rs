@@ -2,7 +2,7 @@ use futures::StreamExt;
 use log::info;
 use serde_json::Value;
 
-use actix_bililive::{ConfigBuilder, connect_with_retry, RetryConfig};
+use actix_bililive::{connect_with_retry, ConfigBuilder, RetryConfig};
 
 #[actix_rt::main]
 async fn main() {
@@ -15,7 +15,9 @@ async fn main() {
         .unwrap()
         .build();
 
-    let mut stream = connect_with_retry(config, RetryConfig::default()).await.unwrap();
+    let mut stream = connect_with_retry(config, RetryConfig::default())
+        .await
+        .unwrap();
     while let Some(e) = stream.next().await {
         match e {
             Ok(packet) => {

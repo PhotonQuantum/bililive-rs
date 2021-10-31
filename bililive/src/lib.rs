@@ -78,12 +78,12 @@
 #![allow(clippy::default_trait_access, clippy::module_name_repetitions)]
 
 pub use bililive_core as core;
-pub use crate::core::errors;
-pub use crate::core::packet::*;
-pub use crate::core::retry::RetryConfig;
 
 #[doc(inline)]
 pub use crate::builder::ConfigBuilder;
+pub use crate::core::errors;
+pub use crate::core::packet::*;
+pub use crate::core::retry::RetryConfig;
 
 mod builder;
 pub mod connect;
