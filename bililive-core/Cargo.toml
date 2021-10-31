@@ -1,0 +1,34 @@
+[package]
+name = "bililive-core"
+version = "0.1.0-beta.1"
+edition = "2021"
+authors = ["LightQuantum <self@lightquantum.me>"]
+description = "Core traits and structs for a simple stream-based bilibili live danmaku implementation."
+license = "MIT"
+keywords = ["bilibili", "live", "stream", "core", "danmaku"]
+repository = "https://github.com/PhotonQuantum/bililive-rs"
+readme = "README.md"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+default = ["tokio-support"]
+tokio-support = ["tokio", "stream-reconnect/tokio"]
+async-std-support = ["async-std", "stream-reconnect/async-std"]
+not-send = ["stream-reconnect/not-send"]
+
+[dependencies]
+async-std = { version = "1.10", optional = true }
+async-trait = "0.1"
+flate2 = "1.0"
+futures = "0.3"
+log = "0.4"
+nom = "7.0"
+rand = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+stream-reconnect = { version = "0.4.0-beta.1", default-features = false }
+thiserror = "1.0"
+tokio = { version = "1.13", features = ["rt"], optional = true }
+url = { version = "2.2", features = ["serde"] }
