@@ -2,7 +2,7 @@
 name = "bililive"
 version = "0.1.1"
 authors = ["LightQuantum <self@lightquantum.me>"]
-edition = "2018"
+edition = "2021"
 description = "A simple stream-based bilibili live client library."
 license = "MIT"
 keywords = ["bilibili", "live", "stream", "client", "danmaku"]

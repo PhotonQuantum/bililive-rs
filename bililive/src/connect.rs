@@ -14,8 +14,11 @@ macro_rules! impl_connect_mod {
         use crate::core::stream::HeartbeatStream;
         use crate::stream::CodecStream;
 
+        /// Raw websocket stream type.
         pub type InnerStream = WebSocketStream<ConnectStream>;
+        /// Bililive stream type.
         pub type DefaultStream = HeartbeatStream<CodecStream<InnerStream>, WsError>;
+        /// Bililive stream type with auto-reconnect mechanism.
         pub type RetryStream = ReconnectStream<
             WsStream<Connector, WsError>,
             RetryContext,
@@ -23,6 +26,7 @@ macro_rules! impl_connect_mod {
             StreamError<WsError>,
         >;
 
+        #[doc(hidden)]
         pub struct Connector;
 
         #[async_trait]

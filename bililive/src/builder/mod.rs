@@ -39,10 +39,32 @@ pub(crate) mod tests;
 
 type BoxedError = Box<dyn std::error::Error>;
 
+/// `bililive` stream config builder.
+///
+/// Stream config can be built via given live room parameters (room id and user id) & danmaku server configs (server token and list).
+///
+/// See the generic type [`ConfigBuilder`](bililive_core::builder::ConfigBuilder) for details.
+///
+/// # Helper methods
+///
+/// [`by_uid`](ConfigBuilder::by_uid) fetches room id by given user id.
+///
+/// [`fetch_conf`](ConfigBuilder::fetch_conf) fetches danmaku server token and list without any input parameter.
 #[cfg(feature = "reqwest")]
 pub type ConfigBuilder<R, U, T, S> =
     bililive_core::builder::ConfigBuilder<reqwest::ReqwestClient, R, U, T, S>;
 
+/// `bililive` stream config builder.
+///
+/// Stream config can be built via given live room parameters (room id and user id) & danmaku server configs (server token and list).
+///
+/// See the generic type [`ConfigBuilder`](bililive_core::builder::ConfigBuilder) for details.
+///
+/// # Helper methods
+///
+/// [`by_uid`](ConfigBuilder::by_uid) fetches room id by given user id.
+///
+/// [`fetch_conf`](ConfigBuilder::fetch_conf) fetches danmaku server token and list without any input parameter.
 #[cfg(feature = "h1-client")]
 #[cfg(not(feature = "reqwest"))]
 pub type ConfigBuilder<R, U, T, S> =

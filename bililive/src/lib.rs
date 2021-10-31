@@ -1,6 +1,6 @@
 //! A simple stream-based bilibili live client library.
 //!
-//! *Minimum supported rust version: 1.53.0*
+//! *Minimum supported rust version: 1.56.0*
 //!
 //! ## Runtime Support
 //!
@@ -27,8 +27,7 @@
 //! ```rust
 //! # #[cfg(feature = "tokio")]
 //! use bililive::connect::tokio::connect_with_retry;
-//! use bililive::ConfigBuilder;
-//! use bililive::core::retry::RetryConfig;
+//! use bililive::{ConfigBuilder, RetryConfig};
 //!
 //! use futures::StreamExt;
 //! use log::info;
@@ -79,6 +78,9 @@
 #![allow(clippy::default_trait_access, clippy::module_name_repetitions)]
 
 pub use bililive_core as core;
+pub use crate::core::errors;
+pub use crate::core::packet::*;
+pub use crate::core::retry::RetryConfig;
 
 #[doc(inline)]
 pub use crate::builder::ConfigBuilder;
