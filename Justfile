@@ -1,3 +1,8 @@
+ci: fmt clippy
+
+fmt:
+	cargo fmt -- --check
+
 clippy:
 	cd ./bililive-core && cargo clippy
 	cd ./bililive && cargo clippy

@@ -24,24 +24,13 @@ jobs:
           profile: minimal
           toolchain: stable
           default: true
+      - uses: extractions/setup-just@v1
       - uses: Swatinem/rust-cache@v1
-      - uses: actions-rs/cargo@v1
-        name: Check Code Format 🔧
-        with:
-          command: fmt
-          args: -- --check
-      - name: Run Clippy Lints (core) 🔨
-        run: cargo clippy
-        working-directory: ./bililive-core
-      - name: Run Clippy Lints (bililive) 🔨
-        run: cargo clippy
-        working-directory: ./bililive
-      - name: Run Clippy Lints (actix-bililive) 🔨
-        run: cargo clippy
-        working-directory: ./actix-bililive
+      - name: Run Lints 🔨
+        run: just ci
 
-  test_tokio:
-    name: Test (tokio)
+  test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -52,36 +41,10 @@ jobs:
           profile: minimal
           toolchain: stable
           default: true
+      - uses: extractions/setup-just@v1
       - uses: Swatinem/rust-cache@v1
-      - name: Running Tests (core) 🚀
-        run: cargo test
-        working-directory: ./bililive-core
-      - name: Running Tests (bililive) 🚀
-        run: cargo test
-        working-directory: ./bililive
-      - name: Running Tests (actix-bililive) 🚀
-        run: cargo test
-        working-directory: ./actix-bililive
-
-  test_async:
-    name: Test (async-std)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        name: Checkout 🛎️
-      - uses: actions-rs/toolchain@v1
-        name: Setup Cargo Toolchain 🛎️
-        with:
-          profile: minimal
-          toolchain: stable
-          default: true
-      - uses: Swatinem/rust-cache@v1
-      - name: Running Tests (core) 🚀
-        run: cargo test --no-default-features --features async-std-support
-        working-directory: ./bililive-core
-      - name: Running Tests (bililive) 🚀
-        run: cargo test --no-default-features --features async-native-tls
-        working-directory: ./bililive
+      - name: Running 🚀
+        run: just test-full
 
   doc_test:
     name: Doc
@@ -96,13 +59,7 @@ jobs:
           profile: minimal
           toolchain: stable
           default: true
+      - uses: extractions/setup-just@v1
       - uses: Swatinem/rust-cache@v1
-      - name: Building Docs (core) 🚀
-        run: cargo rustdoc --all-features
-        working-directory: ./bililive-core
-      - name: Building Docs (bililive) 🚀
-        run: cargo rustdoc --all-features
-        working-directory: ./bililive
-      - name: Building Docs (actix-bililive) 🚀
-        run: cargo rustdoc --all-features
-        working-directory: ./actix-bililive
+      - name: Building Docs 🚀
+        run: just doc-all
