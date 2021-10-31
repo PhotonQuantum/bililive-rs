@@ -1,8 +1,16 @@
 [package]
 name = "actix-bililive"
-version = "0.1.0"
+version = "0.1.0-beta.1"
+authors = ["LightQuantum <self@lightquantum.me>"]
 edition = "2021"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "A simple stream-based bilibili live client library for the Actix ecosystem."
+license = "MIT"
+keywords = ["bilibili", "live", "stream", "actix", "danmaku"]
+repository = "https://github.com/PhotonQuantum/bililive-rs"
+readme = "README.md"
+
+[package.metadata.docs.rs]
+all-features = true
 
 [dependencies]
 actix-codec = "0.4"
