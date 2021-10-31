@@ -10,6 +10,7 @@ use crate::core::packet::Packet;
 
 use super::PacketOrPing;
 
+/// Bililive protocol codec.
 #[derive(Debug)]
 pub struct Codec {
     ws_codec: WsCodec,
@@ -17,6 +18,7 @@ pub struct Codec {
 }
 
 impl Codec {
+    /// Construct a new bililive codec with given websocket protocol codec.
     #[must_use]
     pub const fn new(ws_codec: WsCodec) -> Self {
         Self {

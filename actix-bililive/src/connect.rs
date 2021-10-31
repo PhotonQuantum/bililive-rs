@@ -12,8 +12,11 @@ use crate::core::retry::{RetryConfig, RetryContext, WsStream, WsStreamTrait};
 use crate::core::stream::HeartbeatStream;
 use crate::stream::{Codec, PingPongStream};
 
+/// Raw websocket stream type.
 pub type InnerStream = PingPongStream<Framed<BoxedSocket, Codec>>;
+/// Bililive stream type.
 pub type DefaultStream = HeartbeatStream<InnerStream, WsClientError>;
+/// Bililive stream type with auto-reconnect mechanism.
 pub type RetryStream = ReconnectStream<
     WsStream<Connector, WsClientError>,
     RetryContext,

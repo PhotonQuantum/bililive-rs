@@ -14,6 +14,7 @@ use crate::core::stream::waker::WakerProxy;
 
 use super::PacketOrPing;
 
+/// Auto websocket ping responder wrapper.
 pub struct PingPongStream<T> {
     stream: T,
     tx_waker: Arc<WakerProxy>,

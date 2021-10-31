@@ -1,3 +1,5 @@
+//! Bilibili live stream.
+
 use bytes::Bytes;
 
 pub use codec::Codec;
@@ -10,6 +12,7 @@ mod pingpong;
 #[cfg(test)]
 mod tests;
 
+/// Either a valid bililive packet or a websocket ping message.
 #[derive(Debug)]
 pub enum PacketOrPing {
     Packet(Packet),

@@ -1,4 +1,4 @@
-//! A simple stream-based bilibili live client library.
+//! A simple stream-based bilibili live client library backed by [async-tungstenite](https://github.com/sdroege/async-tungstenite).
 //!
 //! *Minimum supported rust version: 1.56.0*
 //!
