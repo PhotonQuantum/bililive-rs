@@ -1,4 +1,4 @@
-//! A simple stream-based bilibili live client library backed by [awc](https://github.com/actix/actix-web/tree/master/awc).
+//! A simple stream-based bilibili live client library for the Actix ecosystem.
 //!
 //! *Minimum supported rust version: 1.56.0*
 //!

@@ -4,15 +4,15 @@
 [![crates.io](https://img.shields.io/crates/v/bililive?style=flat-square)](https://crates.io/crates/bililive)
 [![Documentation](https://img.shields.io/docsrs/bililive?style=flat-square)](https://docs.rs/bililive)
 
-A simple stream-based bilibili live client library.
+A simple stream-based bilibili live client library backed by [async-tungstenite](https://github.com/sdroege/async-tungstenite).
 
 To use with your project, add the following to your Cargo.toml:
 
 ```
-bililive = "0.1"
+bililive = "0.2.0-beta.1"
 ```
 
-*Minimum supported rust version: 1.53.0*
+*Minimum supported rust version: 1.56.0*
 
 ## Runtime Support
 
@@ -22,7 +22,7 @@ This crate supports both `tokio` and `async-std` runtime.
 Cargo.toml to
 
 ```
-bililive = { version = "0.1", default-features = false, features = ["async-native-tls"] }
+bililive = { version = "0.2.0-beta.1", default-features = false, features = ["async-native-tls"] }
 ```
 
 See `Crates Features` section for more.
@@ -39,7 +39,6 @@ See `Crates Features` section for more.
 
 ```rust
 use bililive::connect::tokio::connect_with_retry;
-use bililive::errors::Result;
 use bililive::{ConfigBuilder, RetryConfig};
 
 use futures::StreamExt;
@@ -48,12 +47,14 @@ use serde_json::Value;
 
 let config = ConfigBuilder::new()
     .by_uid(1602085)
-    .await?
+    .await
+    .unwrap()
     .fetch_conf()
-    .await?
-    .build()?;
+    .await
+    .unwrap()
+    .build();
 
-let mut stream = connect_with_retry(config, RetryConfig::default()).await?;
+let mut stream = connect_with_retry(config, RetryConfig::default()).await.unwrap();
 while let Some(e) = stream.next().await {
     match e {
         Ok(packet) => {

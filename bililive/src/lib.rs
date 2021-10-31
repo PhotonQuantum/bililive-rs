@@ -9,7 +9,7 @@
 //! `tokio` support is enabled by default. While used on an `async-std` runtime, change the corresponding dependency in Cargo.toml to
 //!
 //! ```toml
-//! bililive = { version = "0.1", default-features = false, features = ["async-native-tls"] }
+//! bililive = { version = "0.2.0-beta.1", default-features = false, features = ["async-native-tls"] }
 //! ```
 //!
 //! See `Crates Features` section for more.
