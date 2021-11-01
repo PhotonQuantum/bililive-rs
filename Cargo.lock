@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "actix-bililive"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "actix-codec",
  "actix-rt",
@@ -509,7 +509,7 @@ checksum = "904dfeac50f3cdaba28fc6f57fdcddb75f49ed61346676a78c4ffe55877802fd"
 
 [[package]]
 name = "bililive"
-version = "0.2.0-beta.1"
+version = "0.2.0-beta.2"
 dependencies = [
  "async-std",
  "async-tungstenite",
@@ -530,7 +530,7 @@ dependencies = [
 
 [[package]]
 name = "bililive-core"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "async-std",
  "flate2",

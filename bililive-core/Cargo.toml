@@ -1,6 +1,6 @@
 [package]
 name = "bililive-core"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 edition = "2021"
 authors = ["LightQuantum <self@lightquantum.me>"]
 description = "Core traits and structs for a simple stream-based bilibili live danmaku implementation."
