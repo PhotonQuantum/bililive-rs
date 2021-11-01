@@ -6,7 +6,6 @@ use std::io::ErrorKind;
 use std::marker::PhantomData;
 use std::pin::Pin;
 
-use async_trait::async_trait;
 use futures::SinkExt;
 use futures::{Sink, Stream};
 use stream_reconnect::UnderlyingStream;
@@ -30,7 +29,6 @@ mod policy;
 /// of [`Packet`](crate::packet::Packet) with heartbeat auto-response mechanism implemented
 /// (see [`HeartbeatStream`](crate::stream::HeartbeatStream) for details).
 #[cfg(feature = "not-send")]
-#[async_trait(? Send)]
 pub trait WsStreamTrait<E> {
     /// The returned stream type.
     type Stream: Stream<Item = Result<Packet, StreamError<E>>>
@@ -41,11 +39,10 @@ pub trait WsStreamTrait<E> {
     ///
     /// # Errors
     /// Returns an error when websocket connection fails.
-    async fn connect(url: &str) -> Result<Self::Stream, E>;
+    fn connect(url: &str) -> Pin<Box<dyn Future<Output = Result<Self::Stream, E>> + '_>>;
 }
 
 #[cfg(not(feature = "not-send"))]
-#[async_trait]
 pub trait WsStreamTrait<E> {
     /// The returned stream type.
     type Stream: Stream<Item = Result<Packet, StreamError<E>>>
@@ -57,7 +54,7 @@ pub trait WsStreamTrait<E> {
     ///
     /// # Errors
     /// Returns an error when websocket connection fails.
-    async fn connect(url: &str) -> Result<Self::Stream, E>;
+    fn connect(url: &str) -> Pin<Box<dyn Future<Output = Result<Self::Stream, E>> + Send + '_>>;
 }
 
 /// Wrapper for types implementing `WsStreamTrait`.

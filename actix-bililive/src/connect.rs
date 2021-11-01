@@ -1,7 +1,10 @@
+use std::future::Future;
+use std::pin::Pin;
+use std::str::FromStr;
+
 use actix_codec::Framed;
-use async_trait::async_trait;
 use awc::error::WsClientError;
-use awc::http::Version;
+use awc::http::{Uri, Version};
 use awc::{BoxedSocket, Client};
 use stream_reconnect::{ReconnectStream, UnderlyingStream};
 
@@ -20,22 +23,26 @@ pub type DefaultStream = HeartbeatStream<InnerStream, WsClientError>;
 pub type RetryStream = ReconnectStream<
     WsStream<Connector, WsClientError>,
     RetryContext,
-    std::result::Result<Packet, StreamError<WsClientError>>,
+    Result<Packet, StreamError<WsClientError>>,
     StreamError<WsClientError>,
 >;
 
 pub struct Connector;
 
-#[async_trait(? Send)]
 impl WsStreamTrait<WsClientError> for Connector {
     type Stream = DefaultStream;
-    async fn connect(url: &str) -> Result<Self::Stream, WsClientError> {
+    fn connect(
+        url: &str,
+    ) -> Pin<Box<dyn Future<Output = Result<Self::Stream, WsClientError>> + '_>> {
         let client = Client::builder()
             .max_http_version(Version::HTTP_11)
             .finish();
-        let (_, ws) = client.ws(url).connect().await?;
-        let codec = ws.into_map_codec(Codec::new);
-        Ok(HeartbeatStream::new(PingPongStream::new(codec)))
+        let url = Uri::from_str(url).unwrap();
+        Box::pin(async move {
+            let (_, ws) = client.ws(url).connect().await?;
+            let codec = ws.into_map_codec(Codec::new);
+            Ok(HeartbeatStream::new(PingPongStream::new(codec)))
+        })
     }
 }
 

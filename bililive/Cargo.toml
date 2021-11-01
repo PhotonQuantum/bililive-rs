@@ -22,7 +22,6 @@ h1-client = ["http-client/h1_client"]
 
 [dependencies]
 async-std = { version = "1.10", optional = true }
-async-trait = "0.1"
 async-tungstenite = { version = "0.15", default-features = false }
 bililive-core = { version = "0.1.0-beta.1", path = "../bililive-core", default-features = false }
 futures = "0.3"

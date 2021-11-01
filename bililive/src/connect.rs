@@ -1,11 +1,15 @@
 //! Connection related functions and types.
 macro_rules! impl_connect_mod {
     ($adapter:ident) => {
-        use async_trait::async_trait;
+        use std::future::Future;
+        use std::pin::Pin;
+        use std::str::FromStr;
+
         use async_tungstenite::tungstenite::error::Error as WsError;
         use async_tungstenite::$adapter::{connect_async, ConnectStream};
         use async_tungstenite::WebSocketStream;
         use stream_reconnect::{ReconnectStream, UnderlyingStream};
+        use url::Url;
 
         use crate::core::config::StreamConfig;
         use crate::core::errors::StreamError;
@@ -22,20 +26,24 @@ macro_rules! impl_connect_mod {
         pub type RetryStream = ReconnectStream<
             WsStream<Connector, WsError>,
             RetryContext,
-            std::result::Result<Packet, StreamError<WsError>>,
+            Result<Packet, StreamError<WsError>>,
             StreamError<WsError>,
         >;
 
         #[doc(hidden)]
         pub struct Connector;
 
-        #[async_trait]
         impl WsStreamTrait<WsError> for Connector {
             type Stream = DefaultStream;
-            async fn connect(url: &str) -> Result<Self::Stream, WsError> {
-                Ok(HeartbeatStream::new(CodecStream::new(
-                    connect_async(url).await?.0,
-                )))
+            fn connect(
+                url: &str,
+            ) -> Pin<Box<dyn Future<Output = Result<Self::Stream, WsError>> + Send + '_>> {
+                let url = Url::from_str(url).unwrap();
+                Box::pin(async move {
+                    Ok(HeartbeatStream::new(CodecStream::new(
+                        connect_async(url).await?.0,
+                    )))
+                })
             }
         }
 

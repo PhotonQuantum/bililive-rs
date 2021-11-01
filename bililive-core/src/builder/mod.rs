@@ -1,6 +1,8 @@
 //! `bililive` config builder.
 
+use std::future::Future;
 use std::marker::PhantomData;
+use std::pin::Pin;
 
 /// `bililive` stream config builder.
 ///
@@ -13,7 +15,6 @@ use std::marker::PhantomData;
 /// [`fetch_conf`](ConfigBuilder::fetch_conf) fetches danmaku server token and list without any input parameter.
 ///
 /// See docs of downstream crates for details.
-use async_trait::async_trait;
 use serde::de::DeserializeOwned;
 
 use crate::builder::types::{ConfQueryInner, Resp, RoomQueryInner};
@@ -30,20 +31,24 @@ type BoxedError = Box<dyn std::error::Error>;
 ///
 /// Used in [`ConfigBuilder`](ConfigBuilder) to help fetching bilibili config.
 #[cfg(feature = "not-send")]
-#[async_trait(? Send)]
 pub trait Requester {
     /// Make a `GET` request to the url and try to deserialize the response body as JSON.
-    async fn get_json<T: DeserializeOwned>(&self, url: &str) -> Result<T, BoxedError>;
+    fn get_json<T: DeserializeOwned>(
+        &self,
+        url: &str,
+    ) -> Pin<Box<dyn Future<Output = Result<T, BoxedError>> + '_>>;
 }
 
 /// An abstract HTTP client.
 ///
 /// Used in [`ConfigBuilder`](ConfigBuilder) to help fetching bilibili config.
 #[cfg(not(feature = "not-send"))]
-#[async_trait]
 pub trait Requester: Send + Sync {
     /// Make a `GET` request to the url and try to deserialize the response body as JSON.
-    async fn get_json<T: DeserializeOwned>(&self, url: &str) -> Result<T, BoxedError>;
+    fn get_json<T: DeserializeOwned>(
+        &self,
+        url: &str,
+    ) -> Pin<Box<dyn Future<Output = Result<T, BoxedError>> + Send + '_>>;
 }
 
 #[doc(hidden)]

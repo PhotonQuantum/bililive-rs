@@ -1,6 +1,10 @@
-use async_trait::async_trait;
+use std::future::Future;
+use std::pin::Pin;
+use std::str::FromStr;
+
 use reqwest::Client;
 use serde::de::DeserializeOwned;
+use url::Url;
 
 use crate::core::builder::Requester;
 
@@ -15,11 +19,16 @@ impl From<Client> for ReqwestClient {
     }
 }
 
-#[async_trait]
 impl Requester for ReqwestClient {
-    async fn get_json<T: DeserializeOwned>(&self, url: &str) -> Result<T, BoxedError> {
-        Ok(serde_json::from_slice(
-            &*self.0.get(url).send().await?.bytes().await?,
-        )?)
+    fn get_json<T: DeserializeOwned>(
+        &self,
+        url: &str,
+    ) -> Pin<Box<dyn Future<Output = Result<T, BoxedError>> + Send + '_>> {
+        let url = Url::from_str(url).unwrap();
+        Box::pin(async move {
+            Ok(serde_json::from_slice(
+                &*self.0.get(url).send().await?.bytes().await?,
+            )?)
+        })
     }
 }

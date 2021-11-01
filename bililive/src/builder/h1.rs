@@ -1,4 +1,6 @@
-use async_trait::async_trait;
+use std::future::Future;
+use std::pin::Pin;
+
 use http_client::h1::H1Client as Client;
 use http_client::HttpClient;
 use serde::de::DeserializeOwned;
@@ -16,12 +18,16 @@ impl From<Client> for H1Client {
     }
 }
 
-#[async_trait]
 impl Requester for H1Client {
-    async fn get_json<T: DeserializeOwned>(&self, url: &str) -> Result<T, BoxedError> {
+    fn get_json<T: DeserializeOwned>(
+        &self,
+        url: &str,
+    ) -> Pin<Box<dyn Future<Output = Result<T, BoxedError>> + Send + '_>> {
         let req = http_client::Request::get(url);
-        Ok(serde_json::from_slice(
-            &*self.0.send(req).await?.body_bytes().await?,
-        )?)
+        Box::pin(async move {
+            Ok(serde_json::from_slice(
+                &*self.0.send(req).await?.body_bytes().await?,
+            )?)
+        })
     }
 }

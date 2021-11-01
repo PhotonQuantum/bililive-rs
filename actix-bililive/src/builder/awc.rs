@@ -1,4 +1,8 @@
-use async_trait::async_trait;
+use std::future::Future;
+use std::pin::Pin;
+use std::str::FromStr;
+
+use awc::http::Uri;
 use awc::Client;
 use serde::de::DeserializeOwned;
 
@@ -15,9 +19,12 @@ impl From<Client> for AWCClient {
     }
 }
 
-#[async_trait(? Send)]
 impl Requester for AWCClient {
-    async fn get_json<T: DeserializeOwned>(&self, url: &str) -> Result<T, BoxedError> {
-        Ok(self.0.get(url).send().await?.json().await?)
+    fn get_json<T: DeserializeOwned>(
+        &self,
+        url: &str,
+    ) -> Pin<Box<dyn Future<Output = Result<T, BoxedError>> + '_>> {
+        let url = Uri::from_str(url).unwrap();
+        Box::pin(async move { Ok(self.0.get(url).send().await?.json().await?) })
     }
 }

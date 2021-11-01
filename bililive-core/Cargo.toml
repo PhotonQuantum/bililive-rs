@@ -20,7 +20,6 @@ not-send = ["stream-reconnect/not-send"]
 
 [dependencies]
 async-std = { version = "1.10", optional = true }
-async-trait = "0.1"
 flate2 = "1.0"
 futures = "0.3"
 log = "0.4"
