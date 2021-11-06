@@ -77,19 +77,14 @@
 
 #![allow(clippy::default_trait_access, clippy::module_name_repetitions)]
 
-use async_tungstenite::tungstenite::Error as WsError;
-
 pub use bililive_core as core;
 
 #[doc(inline)]
 pub use crate::builder::ConfigBuilder;
-pub use crate::core::errors;
 pub use crate::core::packet::*;
 pub use crate::core::retry::RetryConfig;
 
-/// Errors that may occur when consuming a stream.
-pub type StreamError = errors::StreamError<WsError>;
-
 mod builder;
 pub mod connect;
+pub mod errors;
 pub mod stream;

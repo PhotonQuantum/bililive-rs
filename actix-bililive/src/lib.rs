@@ -53,20 +53,15 @@
 
 #![allow(clippy::module_name_repetitions, clippy::future_not_send)]
 
-use awc::error::WsClientError;
-
 pub use bililive_core as core;
 #[doc(inline)]
 pub use builder::ConfigBuilder;
 pub use connect::{connect, connect_with_retry};
 
-pub use crate::core::errors;
 pub use crate::core::packet::*;
 pub use crate::core::retry::RetryConfig;
 
-/// Errors that may occur when consuming a stream.
-pub type StreamError = errors::StreamError<WsClientError>;
-
 mod builder;
 mod connect;
+pub mod errors;
 pub mod stream;
