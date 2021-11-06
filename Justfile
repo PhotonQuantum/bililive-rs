@@ -15,14 +15,14 @@ clippy-pedantic:
 
 test $FAST_TEST="1":
 	cd ./bililive-core && cargo test
-	cd ./bililive-core && cargo test --no-default-features --features async-std-support
+	cd ./bililive-core && cargo test --no-default-features --features async-std
 	cd ./bililive && cargo test
 	cd ./bililive && cargo test --no-default-features --features async-native-tls
 	cd ./actix-bililive && cargo test
 
 test-full:
 	cd ./bililive-core && cargo test
-	cd ./bililive-core && cargo test --no-default-features --features async-std-support
+	cd ./bililive-core && cargo test --no-default-features --features async-std
 	cd ./bililive && cargo test
 	cd ./bililive && cargo test --no-default-features --features async-native-tls
 	cd ./actix-bililive && cargo test

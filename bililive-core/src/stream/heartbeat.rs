@@ -90,16 +90,16 @@ where
             #[cfg(feature = "tokio")]
             {
                 let waker = cx.waker().clone();
-                tokio::spawn(async {
-                    tokio::time::sleep(Duration::from_secs(30)).await;
+                tokio1::spawn(async {
+                    tokio1::time::sleep(Duration::from_secs(30)).await;
                     waker.wake();
                 });
             }
             #[cfg(feature = "async-std")]
             {
                 let waker = cx.waker().clone();
-                async_std::task::spawn(async {
-                    async_std::task::sleep(Duration::from_secs(30)).await;
+                async_std1::task::spawn(async {
+                    async_std1::task::sleep(Duration::from_secs(30)).await;
                     waker.wake();
                 });
             }

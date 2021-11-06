@@ -13,13 +13,13 @@ readme = "README.md"
 all-features = true
 
 [features]
-default = ["tokio-support"]
-tokio-support = ["tokio", "stream-reconnect/tokio"]
-async-std-support = ["async-std", "stream-reconnect/async-std"]
+default = ["tokio"]
+tokio = ["tokio1", "stream-reconnect/tokio"]
+async-std = ["async-std1", "stream-reconnect/async-std"]
 not-send = ["stream-reconnect/not-send"]
 
 [dependencies]
-async-std = { version = "1.10", optional = true }
+async-std1 = { package = "async-std", version = "1.10", optional = true }
 flate2 = "1.0"
 futures = "0.3"
 log = "0.4"
@@ -29,5 +29,5 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 stream-reconnect = { version = "0.4.0-beta.1", default-features = false }
 thiserror = "1.0"
-tokio = { version = "1.13", features = ["rt"], optional = true }
+tokio1 = { package = "tokio", version = "1.13", features = ["rt"], optional = true }
 url = { version = "2.2", features = ["serde"] }

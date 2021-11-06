@@ -12,6 +12,6 @@ complete bilibili live client.
 If you need a batteries-included client, you may want to look at `bililive` or `actix-bililive`.
 
 ## Feature Flags
-- `tokio-support` (default) - enable tokio support.
-- `async-std-support` - enable async-std support.
+- `tokio` (default) - enable tokio support.
+- `async-std` - enable async-std support.
 - `not-send` - Remove `Send` constraints on traits and types. Useful for actix clients.
