@@ -1,6 +1,6 @@
 [package]
 name = "actix-bililive"
-version = "0.1.0-beta.2"
+version = "0.1.0-beta.3"
 authors = ["LightQuantum <self@lightquantum.me>"]
 edition = "2021"
 description = "A simple stream-based bilibili live client library for the Actix ecosystem."
@@ -15,7 +15,7 @@ all-features = true
 [dependencies]
 actix-codec = "0.4"
 awc = { version = "3.0.0-beta.9", features = ["openssl"] }
-bililive-core = { version = "0.1.0-beta.2", path = "../bililive-core", features = ["not-send"] }
+bililive-core = { version = "0.1.0-beta.3", path = "../bililive-core", features = ["not-send"] }
 bytes = "1.1"
 futures = "0.3"
 log = "0.4"
