@@ -50,6 +50,16 @@ impl<T> BililiveStream<T> {
             read_buffer: vec![],
         }
     }
+
+    fn with_context<F, U>(&mut self, f: F) -> U
+    where
+        F: FnOnce(&mut Context<'_>, &mut T) -> U,
+    {
+        let waker = Waker::from(self.tx_waker.clone());
+        let mut cx = Context::from_waker(&waker);
+
+        f(&mut cx, &mut self.stream)
+    }
 }
 
 impl<T> Stream for BililiveStream<T>
@@ -63,7 +73,7 @@ where
         self.tx_waker.rx(cx.waker());
 
         // ensure that all pending write op are completed
-        ready!(self.as_mut().poll_ready(cx))?;
+        ready!(self.with_context(|cx, s| Pin::new(s).poll_ready(cx)))?;
 
         // check whether we need to send heartbeat now.
         let now = Instant::now();
@@ -100,10 +110,10 @@ where
                     waker.wake();
                 });
             }
-        }
 
-        // ensure that heartbeat is sent
-        ready!(self.as_mut().poll_flush(cx))?;
+            // ensure that heartbeat is sent
+            ready!(self.with_context(|cx, s| Pin::new(s).poll_flush(cx)))?;
+        }
 
         loop {
             // poll the underlying websocket stream
