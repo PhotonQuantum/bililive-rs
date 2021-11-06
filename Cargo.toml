@@ -29,7 +29,7 @@ h1-client = ["http-client/h1_client"]
 [dependencies]
 tokio = { version = "1.12", optional = true }
 async-std = { version = "1.10", optional = true }
-async-tungstenite = { version = "0.15", default-features = false }
+async-tungstenite = { version = "0.16", default-features = false }
 http-client = { version = "6.5", default-features = false, optional = true }
 reqwest = { version = "0.11", default-features = false, optional = true }
 thiserror = "1.0"
