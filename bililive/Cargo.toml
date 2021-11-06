@@ -1,6 +1,6 @@
 [package]
 name = "bililive"
-version = "0.2.0-beta.3"
+version = "0.2.0-beta.4"
 authors = ["LightQuantum <self@lightquantum.me>"]
 edition = "2021"
 description = "A simple stream-based bilibili live client library."
