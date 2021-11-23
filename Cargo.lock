@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "actix-bililive"
-version = "0.1.0-beta.4"
+version = "0.1.0-beta.5"
 dependencies = [
  "actix-codec",
  "actix-rt",
@@ -218,9 +218,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.45"
+version = "1.0.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee10e43ae4a853c0a3591d4e2ada1719e553be18199d9da9d4a83f5927c2f5c7"
+checksum = "62e1f47f7dc0422027a4e370dd4548d4d66b26782e513e98dca1e689e058a80e"
 
 [[package]]
 name = "arrayvec"
@@ -291,18 +291,16 @@ dependencies = [
 
 [[package]]
 name = "async-h1"
-version = "2.3.2"
+version = "2.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc5142de15b549749cce62923a50714b0d7b77f5090ced141599e78899865451"
+checksum = "8101020758a4fc3a7c326cb42aa99e9fa77cbfb76987c128ad956406fe1f70a7"
 dependencies = [
  "async-channel",
  "async-dup",
  "async-std",
- "byte-pool",
  "futures-core",
  "http-types",
  "httparse",
- "lazy_static",
  "log",
  "pin-project",
 ]
@@ -606,16 +604,6 @@ name = "bumpalo"
 version = "3.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f1e260c3a9040a7c19a12468758f4c16f31a81a1fe087482be9570ec864bb6c"
-
-[[package]]
-name = "byte-pool"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8c7230ddbb427b1094d477d821a99f3f54d36333178eeb806e279bcdcecf0ca"
-dependencies = [
- "crossbeam-queue",
- "stable_deref_trait",
-]
 
 [[package]]
 name = "byteorder"
@@ -1399,9 +1387,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.107"
+version = "0.2.108"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fbe5e23404da5b4f555ef85ebed98fb4083e55a00c317800bc2a50ede9f3d219"
+checksum = "8521a1b57e76b1ec69af7599e75e38e7b7fad6610f037db8c79b127201b5d119"
 
 [[package]]
 name = "local-channel"
@@ -1964,9 +1952,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.20.1"
+version = "0.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dac4581f0fc0e0efd529d069e8189ec7b90b8e7680e21beb35141bdc45f36040"
+checksum = "d37e5e2290f3e040b594b1a9e04377c2c671f1a1cfd9bfdef82106ac1c113f84"
 dependencies = [
  "log",
  "ring",
@@ -2238,12 +2226,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
-name = "stable_deref_trait"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
-
-[[package]]
 name = "standback"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2502,7 +2484,7 @@ version = "0.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4baa378e417d780beff82bf54ceb0d195193ea6a00c14e22359e7f39456b5689"
 dependencies = [
- "rustls 0.20.1",
+ "rustls 0.20.2",
  "tokio",
  "webpki 0.22.0",
 ]
@@ -2591,7 +2573,7 @@ dependencies = [
  "log",
  "native-tls",
  "rand 0.8.4",
- "rustls 0.20.1",
+ "rustls 0.20.2",
  "sha-1",
  "thiserror",
  "url",
