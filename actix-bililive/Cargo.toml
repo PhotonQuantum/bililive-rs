@@ -12,9 +12,14 @@ readme = "README.md"
 [package.metadata.docs.rs]
 all-features = true
 
+[features]
+default = ["openssl"]
+openssl = ["awc/openssl"]
+rustls = ["awc/rustls"]
+
 [dependencies]
 actix-codec = "0.4"
-awc = { version = "3.0.0-beta.14", features = ["openssl"] }
+awc = "3.0.0-beta.14"
 bililive-core = { version = "0.1.0-beta.3", path = "../bililive-core", features = ["not-send"] }
 bytes = "1.1"
 futures = "0.3"
