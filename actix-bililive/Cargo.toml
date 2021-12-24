@@ -1,6 +1,6 @@
 [package]
 name = "actix-bililive"
-version = "0.1.0-beta.6"
+version = "0.1.0-beta.7"
 authors = ["LightQuantum <self@lightquantum.me>"]
 edition = "2021"
 description = "A simple stream-based bilibili live client library for the Actix ecosystem."
