@@ -6,7 +6,7 @@ version = 3
 name = "actix-bililive"
 version = "0.1.0-beta.7"
 dependencies = [
- "actix-codec",
+ "actix-codec 0.5.0",
  "actix-rt",
  "awc",
  "bililive-core",
@@ -32,7 +32,24 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "tokio",
- "tokio-util",
+ "tokio-util 0.6.9",
+]
+
+[[package]]
+name = "actix-codec"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57a7559404a7f3573127aab53c08ce37a6c6a315c374a31070f3c91cd1b4a7fe"
+dependencies = [
+ "bitflags",
+ "bytes",
+ "futures-core",
+ "futures-sink",
+ "log",
+ "memchr",
+ "pin-project-lite",
+ "tokio",
+ "tokio-util 0.7.0",
 ]
 
 [[package]]
@@ -41,7 +58,7 @@ version = "3.0.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08aac516b88cb8cfbfa834c76b58607ffac75946d947dcb6a9ffc5673e1e875d"
 dependencies = [
- "actix-codec",
+ "actix-codec 0.4.2",
  "actix-rt",
  "actix-service",
  "actix-utils",
@@ -110,7 +127,7 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5ef5760747cdfb108a1f35e6911a7a40939da893f95e035f9eee0c18b4b4025"
 dependencies = [
- "actix-codec",
+ "actix-codec 0.4.2",
  "actix-rt",
  "actix-service",
  "actix-utils",
@@ -122,7 +139,7 @@ dependencies = [
  "pin-project-lite",
  "tokio-openssl",
  "tokio-rustls",
- "tokio-util",
+ "tokio-util 0.6.9",
  "webpki-roots",
 ]
 
@@ -485,7 +502,7 @@ version = "3.0.0-beta.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a64a95bbf4905fd057ea45b70fdfeeb9c7ae09f03f091642c4e66a16ebb3ad5"
 dependencies = [
- "actix-codec",
+ "actix-codec 0.4.2",
  "actix-http",
  "actix-rt",
  "actix-service",
@@ -1157,7 +1174,7 @@ dependencies = [
  "indexmap",
  "slab",
  "tokio",
- "tokio-util",
+ "tokio-util 0.6.9",
  "tracing",
 ]
 
@@ -2520,6 +2537,20 @@ name = "tokio-util"
 version = "0.6.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e99e1983e5d376cd8eb4b66604d2e99e79f5bd988c3055891dcd8c9e2604cc0"
+dependencies = [
+ "bytes",
+ "futures-core",
+ "futures-sink",
+ "log",
+ "pin-project-lite",
+ "tokio",
+]
+
+[[package]]
+name = "tokio-util"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64910e1b9c1901aaf5375561e35b9c057d95ff41a44ede043a03e09279eabaf1"
 dependencies = [
  "bytes",
  "futures-core",
