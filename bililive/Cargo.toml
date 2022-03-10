@@ -1,6 +1,6 @@
 [package]
 name = "bililive"
-version = "0.2.0-beta.4"
+version = "0.2.0-beta.5"
 authors = ["LightQuantum <self@lightquantum.me>"]
 edition = "2021"
 description = "A simple stream-based bilibili live client library."
@@ -23,7 +23,7 @@ h1-client = ["http-client/h1_client"]
 [dependencies]
 async-std = { version = "1.10", optional = true }
 async-tungstenite = { version = "0.17", default-features = false }
-bililive-core = { version = "0.1.0-beta.3", path = "../bililive-core", default-features = false }
+bililive-core = { version = "0.1.0-beta.4", path = "../bililive-core", default-features = false }
 futures = "0.3"
 http-client = { version = "6.5", default-features = false, optional = true }
 log = "0.4"
