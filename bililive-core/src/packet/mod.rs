@@ -184,7 +184,7 @@ impl Packet {
     pub fn parse(input: &[u8]) -> IncompleteResult<(&[u8], Self)> {
         match parser::parse(input) {
             Ok((input, packet)) => {
-                if let Protocol::Zlib = packet.protocol_version {
+                if packet.protocol_version == Protocol::Zlib {
                     let mut z = ZlibDecoder::new(Cursor::new(packet.data));
                     let mut buf = Vec::new();
                     if let Err(e) = z.read_to_end(&mut buf) {

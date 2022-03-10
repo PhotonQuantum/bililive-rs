@@ -1,6 +1,5 @@
 //! Error types.
-use std::error::Error;
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::Debug;
 
 use nom::Needed;
 use thiserror::Error;
@@ -32,31 +31,16 @@ pub enum ParseError {
     ZlibError(#[from] std::io::Error),
 }
 
+#[cfg(feature = "not-send")]
+pub(crate) type BoxedError = Box<dyn std::error::Error>;
+
+#[cfg(not(feature = "not-send"))]
+pub(crate) type BoxedError = Box<dyn std::error::Error + Send + Sync>;
+
 /// Errors that may occur when making HTTP requests through builder.
-#[derive(Debug)]
-pub struct BuildError(pub(crate) Box<dyn std::error::Error>);
-
-impl Display for BuildError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        Display::fmt(&self.0, f)
-    }
-}
-
-impl Error for BuildError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        self.0.source()
-    }
-
-    #[allow(deprecated)]
-    fn description(&self) -> &str {
-        self.0.description()
-    }
-
-    #[allow(deprecated)]
-    fn cause(&self) -> Option<&dyn Error> {
-        self.0.cause()
-    }
-}
+#[derive(Debug, Error)]
+#[error("error when making http request: {0}")]
+pub struct BuildError(#[source] pub(crate) BoxedError);
 
 /// Errors that may occur when consuming a stream.
 ///

@@ -37,7 +37,7 @@ mod reqwest;
 #[cfg(test)]
 pub(crate) mod tests;
 
-type BoxedError = Box<dyn std::error::Error>;
+type BoxedError = Box<dyn std::error::Error + Send + Sync>;
 
 /// `bililive` stream config builder.
 ///

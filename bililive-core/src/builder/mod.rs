@@ -19,13 +19,11 @@ use serde::de::DeserializeOwned;
 
 use crate::builder::types::{ConfQueryInner, Resp, RoomQueryInner};
 use crate::config::StreamConfig;
-use crate::errors::BuildError;
+use crate::errors::{BoxedError, BuildError};
 
 #[cfg(test)]
 mod tests;
 mod types;
-
-type BoxedError = Box<dyn std::error::Error>;
 
 /// An abstract HTTP client.
 ///

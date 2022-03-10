@@ -89,12 +89,9 @@ where
 {
     type Error = StreamError<WsError>;
 
-    fn poll_ready(
-        mut self: Pin<&mut Self>,
-        mut cx: &mut Context<'_>,
-    ) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Pin::new(&mut self.stream)
-            .poll_ready(&mut cx)
+            .poll_ready(cx)
             .map_err(StreamError::from_ws_error)
     }
 
@@ -104,21 +101,15 @@ where
             .map_err(StreamError::from_ws_error)
     }
 
-    fn poll_flush(
-        mut self: Pin<&mut Self>,
-        mut cx: &mut Context<'_>,
-    ) -> Poll<Result<(), Self::Error>> {
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Pin::new(&mut self.stream)
-            .poll_flush(&mut cx)
+            .poll_flush(cx)
             .map_err(StreamError::from_ws_error)
     }
 
-    fn poll_close(
-        mut self: Pin<&mut Self>,
-        mut cx: &mut Context<'_>,
-    ) -> Poll<Result<(), Self::Error>> {
+    fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Pin::new(&mut self.stream)
-            .poll_close(&mut cx)
+            .poll_close(cx)
             .map_err(StreamError::from_ws_error)
     }
 }
