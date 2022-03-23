@@ -21,7 +21,7 @@ async-native-tls = ["async-std", "async-tungstenite/async-native-tls", "h1-clien
 h1-client = ["http-client/h1_client"]
 
 [dependencies]
-async-std = { version = "1.10", optional = true }
+async-std = { version = "1.11", optional = true }
 async-tungstenite = { version = "0.17", default-features = false }
 bililive-core = { version = "0.1.0-beta.4", path = "../bililive-core", default-features = false }
 futures = "0.3"
@@ -36,7 +36,7 @@ tokio = { version = "1.16", optional = true }
 url = { version = "2.2", features = ["serde"] }
 
 [dev-dependencies]
-async-std = { version = "1.10", features = ["attributes"] }
+async-std = { version = "1.11", features = ["attributes"] }
 pretty_env_logger = "0.4"
 tokio = { version = "1.16", features = ["macros", "rt-multi-thread"] }
 tokio-test = "0.4"
