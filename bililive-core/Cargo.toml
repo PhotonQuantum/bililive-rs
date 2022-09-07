@@ -30,4 +30,4 @@ serde_json = "1.0"
 stream-reconnect = { version = "0.4.0-beta.1", default-features = false }
 thiserror = "1.0"
 tokio1 = { package = "tokio", version = "1.13", features = ["rt"], optional = true }
-url = { version = "2.2", features = ["serde"] }
+url = { version = "2.3", features = ["serde"] }
