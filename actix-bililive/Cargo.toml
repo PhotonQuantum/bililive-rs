@@ -19,7 +19,7 @@ rustls = ["awc/rustls"]
 
 [dependencies]
 actix-codec = "0.5"
-awc = "3.0.1"
+awc = "3.2.0"
 bililive-core = { version = "0.1.0-beta.3", path = "../bililive-core", features = ["not-send"] }
 bytes = "1.4"
 futures = "0.3"
