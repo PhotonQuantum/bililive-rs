@@ -37,9 +37,9 @@ dependencies = [
 
 [[package]]
 name = "actix-http"
-version = "3.5.1"
+version = "3.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "129d4c88e98860e1758c5de288d1632b07970a16d59bdf7b8d66053d582bb71f"
+checksum = "d223b13fd481fc0d1f83bb12659ae774d9e3601814c68a0bc539731698cca743"
 dependencies = [
  "actix-codec",
  "actix-rt",
@@ -56,7 +56,7 @@ dependencies = [
  "flate2",
  "futures-core",
  "h2",
- "http",
+ "http 0.2.9",
  "httparse",
  "httpdate",
  "itoa",
@@ -108,15 +108,16 @@ dependencies = [
 
 [[package]]
 name = "actix-tls"
-version = "3.1.0"
+version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a70bd48b6604191a700372f60bdc997db560eff5e4d41a7f00664390b5228b38"
+checksum = "d4cce60a2f2b477bc72e5cde0af1812a6e82d8fd85b5570a5dcf2a5bf2c5be5f"
 dependencies = [
  "actix-rt",
  "actix-service",
  "actix-utils",
  "futures-core",
- "http",
+ "http 0.2.9",
+ "http 1.0.0",
  "impl-more",
  "openssl",
  "pin-project-lite",
@@ -494,9 +495,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "awc"
-version = "3.3.0"
+version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b625cad34428b3b82d0bd548b26a1cd0a3d70b6109e9b4e3355d8f1802a8b1c6"
+checksum = "68c09cc97310b926f01621faee652f3d1b0962545a3cec6c9ac07def9ea36c2c"
 dependencies = [
  "actix-codec",
  "actix-http",
@@ -512,7 +513,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2",
- "http",
+ "http 0.2.9",
  "itoa",
  "log",
  "mime",
@@ -1219,7 +1220,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "futures-util",
- "http",
+ "http 0.2.9",
  "indexmap",
  "slab",
  "tokio",
@@ -1286,13 +1287,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "http"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b32afd38673a8016f7c9ae69e5af41a58f81b1d31689040f2f1959594ce194ea"
+dependencies = [
+ "bytes",
+ "fnv",
+ "itoa",
+]
+
+[[package]]
 name = "http-body"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ff4f84919677303da5f147645dbea6b1881f368d03ac84e1dc09031ebd7b2c6"
 dependencies = [
  "bytes",
- "http",
+ "http 0.2.9",
  "pin-project-lite",
 ]
 
@@ -1365,7 +1377,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2",
- "http",
+ "http 0.2.9",
  "http-body",
  "httparse",
  "httpdate",
@@ -1384,7 +1396,7 @@ version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0646026eb1b3eea4cd9ba47912ea5ce9cc07713d105b1a14698f4e6433d348b7"
 dependencies = [
- "http",
+ "http 0.2.9",
  "hyper",
  "rustls 0.21.6",
  "tokio",
@@ -2012,7 +2024,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2",
- "http",
+ "http 0.2.9",
  "http-body",
  "hyper",
  "hyper-rustls",
@@ -2785,7 +2797,7 @@ dependencies = [
  "byteorder",
  "bytes",
  "data-encoding",
- "http",
+ "http 0.2.9",
  "httparse",
  "log",
  "native-tls",
